@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SYS_DEPS=(python-pip python-setuptools python-devel gcc libxml2)
+SYS_DEPS=(python-pip python-setuptools python-devel gcc make gcc-c++)
 
 PYTHON_DEPS=(gevent kazoo)
 
@@ -17,10 +17,9 @@ function install_dependencies()
    done
 }
 
-
 function install_sys_dep()
 {         
-    if [ `rpm -q $1  | grep -c "not"` = 1 ];then
+    if [ `rpm -q $1 | grep -c "not"` = 1 ];then
         yum -y -q install  $1
     else
         echo "Package \"${1}\" was already installed."
