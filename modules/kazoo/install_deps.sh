@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SYS_DEPS=(python-pip python-setuptools python-devel gcc make gcc-c++)
-
 PYTHON_DEPS=(gevent kazoo)
 
 function install_dependencies()
