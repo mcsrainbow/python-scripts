@@ -1,2 +1,0 @@
-sudo python-pip install gevent
-sudo python-pip install kazoo
