@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-# FileName: starmean.py
-# Date: Sat 13 Apr 2013 02:16:46 AM CST
-# Author: Dong Guo
-
 def test1(**kwargs):
     print kwargs['name']
     print kwargs['age']

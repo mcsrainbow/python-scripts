@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-# FileName: no_elif.py
-# Date: Sat 13 Apr 2013 03:22:41 AM CST
-# Author: Dong Guo
-
 class A(object):
     def __init__(self):
         self._funcs = {

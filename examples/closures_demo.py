@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-# FileName: closures_demo.py
-# Date: Sun 14 Apr 2013 09:23:13 AM CST
-# Author: Dong Guo
-
 def test1(a, b):
     def test2(a):
         return 2*a
