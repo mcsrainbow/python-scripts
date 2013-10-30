@@ -34,8 +34,8 @@ def count_avg(**kwargs):
             if count != "None":
                 sum = Decimal(sum) + Decimal(count)
                 num = num + 1
-                avg = Decimal(sum) / num
-                return round(avg,2)
+        avg = Decimal(sum) / num
+        return round(avg,2)
     return False
 
 # connect the database
