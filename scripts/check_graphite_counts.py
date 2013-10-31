@@ -12,7 +12,8 @@ from decimal import Decimal
 try:
     from torndb import Connection
 except ImportError:
-    sys.stderr.write("ERROR: Requires MySQLdb and torndb.")
+    sys.stderr.write("ERROR: Requires MySQLdb and torndb.\n")
+    sys.exit(1)
 
 def count_avg(**kwargs):
     """Get the average value of counts in given period."""
@@ -21,11 +22,11 @@ def count_avg(**kwargs):
     partner_id = kwargs['partner_id']
     period = kwargs['period']
 
-    url = """http://server/counts?partner_id={0}&period={1}""".format(partner_id,period)
-    command = """/usr/bin/curl -s -u username:passwd '%s' | awk -F "|" '{print $2}'""" % (url)
-    status, output = commands.getstatusoutput(command)
-    command_grep = """echo %s | grep [0-9]""" % (output)
-    status_grep, output_grep = commands.getstatusoutput(command_grep)
+    url = "http://server/data?target=partner_id={0}&period={1}".format(partner_id,period)
+    cmd = """/usr/bin/curl -s -u user:pass '%s' | awk -F "|" '{print $2}'""" % (url)
+    status, output = commands.getstatusoutput(cmd)
+    cmd_grep = """echo %s | grep [0-9]""" % (output)
+    status_grep, output_grep = commands.getstatusoutput(cmd_grep)
     if status_grep == 0:
         counts = output.split(',')
         sum = 0
@@ -39,12 +40,12 @@ def count_avg(**kwargs):
     return False
 
 # connect the database
-db = Connection("server", "database", "username", "passwd")
+db = Connection("server", "db", "user", "pass")
 
 # partner_list
 partner_list = [
-21012,21022,21054,21061,21133,
-21223,21242,21292,21353,
+3310,3323,3355,3372,3311,3322,3372,3391,
+3460,3573,3627,3744,3901,4202
 ]
 
 # get the partner_id from database
@@ -59,7 +60,7 @@ avg_next = count_avg(partner_id=partner_id,period=60)
 if avg_next != False and avg_prev != False:
 """
 
-failed_partner_num = 0
+failed_partner_number = 0
 failed_partner_name = ""
 
 # get the partner_id from partner_list
@@ -72,14 +73,14 @@ for partner_id in partner_list:
     
     if avg_next != False and avg_prev != False:
         avg_prev_cmp = avg_prev * 4
-        avg_next_cmp = avg_prev * 0.5
+        avg_next_cmp = avg_next * 0.5
         if avg_prev_cmp < avg_next_cmp:
-            failed_partner_num = failed_partner_num + 1
+            failed_partner_number = failed_partner_number + 1
             failed_partner_name = failed_partner_name + partner_name + ","
     
-if failed_partner_num > 0:
-    print """CRIT. {0} partners failed: {1} """.format(failed_partner_num,failed_partner_name)
+if failed_partner_number > 0:
+    print "CRIT. {0} possible conversion ping issue: {1} ".format(failed_partner_number,failed_partner_name)
     sys.exit(2)
 
-print """OK. No partner failed."""
+print "OK"
 sys.exit(0)
