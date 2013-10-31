@@ -65,7 +65,7 @@ failed_partner_name = ""
 
 # get the partner_id from partner_list
 for partner_id in partner_list:
-    for item in db.query("SELECT * FROM partners where partner_id={0}".format(partner_id)):
+    for item in db.query("SELECT * FROM partners WHERE partner_id={0}".format(partner_id)):
         partner_name = item.name
     
     avg_prev = count_avg(partner_id=partner_id,period=15)
