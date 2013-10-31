@@ -22,7 +22,7 @@ def count_avg(**kwargs):
     partner_id = kwargs['partner_id']
     period = kwargs['period']
 
-    url = "http://server/data?target=partner_id={0}&period={1}".format(partner_id,period)
+    url = "http://server/data?partner_id={0}&period={1}".format(partner_id,period)
     cmd = """/usr/bin/curl -s -u user:pass '%s' | awk -F "|" '{print $2}'""" % (url)
     status, output = commands.getstatusoutput(cmd)
     cmd_grep = """echo %s | grep [0-9]""" % (output)
