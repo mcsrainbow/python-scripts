@@ -18,7 +18,6 @@ targetURL = "http://heylinux.com/archives/2542.html"
 hugeFile = "http://mirror.sohu.com/centos/6.4/isos/x86_64/CentOS-6.4-x86_64-bin-DVD1.iso#i%d"
 
 # Fetch Pingback-URL 
-#pingbackURL = urlopen(targetURL).headers["X-Pingback"]
 pingbackURL = 'http://heylinux.com/xmlrpc.php'
 print "Target URL: %s\nPingback:  %s" % (targetURL, pingbackURL)
 

@@ -2,7 +2,7 @@
 #-*- coding:utf-8 -*-
 
 # Author: Dong Guo
-# Last Modified: 2013/11/26
+# Last Modified: 2013/12/9
 
 import os
 import sys
@@ -21,11 +21,11 @@ def parse_opts():
         '''
         examples:
           {0} -s iad2-vm1003 -f iad2-vm1003.list
-          {0} -s iad2-vm1003 -t t_ads_50 -n iad2-ads21 -i 172.16.8.65 -e 255.255.252.0 -g 172.16.8.1 -c 4 -m 8G
+          {0} -s iad2-vm1003 -t t_c64_min -n iad2-ads21 -i 172.16.8.65 -e 255.255.252.0 -g 172.16.8.1 -c 4 -m 8G -d 50G
 
           iad2-vm1003.list:
-            t_ads_50,iad2-ads21,172.16.8.65,255.255.252.0,172.16.8.1,4,8G
-            t_ads_50,iad2-ads41,172.16.8.66,255.255.252.0,172.16.8.1,4,8G
+            t_c64_min,iad2-ads21,172.16.8.65,255.255.252.0,172.16.8.1,4,8G,50G,
+            t_c64_min,iad2-ads41,172.16.8.66,255.255.252.0,172.16.8.1,4,8G,50G,
             ...
         '''.format(__file__)
         ))
@@ -40,11 +40,12 @@ def parse_opts():
     parser.add_argument('-e', metavar='netmask', type=str, help='netmask of vm')
     parser.add_argument('-g', metavar='gateway', type=str, help='gateway of vm')
     parser.add_argument('-c', metavar='cpu', type=int, help='cpu cores of vm')
-    parser.add_argument('-m', metavar='memory', type=str, help='memory of vm')
+    parser.add_argument('-m', metavar='memory', type=str, help='memory size of vm')
+    parser.add_argument('-d', metavar='disk', type=str, help='disk size of vm')
 
     args = parser.parse_args()
-    return {'server':args.s, 'filename':args.f, 'template':args.t, 'hostname':args.n,
-            'ipaddr':args.i, 'netmask':args.e, 'gateway':args.g, 'cpu':args.c, 'memory':args.m}
+    return {'server':args.s, 'filename':args.f, 'template':args.t, 'hostname':args.n, 'ipaddr':args.i, 
+            'netmask':args.e, 'gateway':args.g, 'cpu':args.c, 'memory':args.m, 'disk':args.d}
 
 def isup(host):
     """Check if host is up"""
@@ -64,7 +65,7 @@ def fab_execute(host,task):
     """Execute the task in class FabricSupport."""
 
     user = "adsymp"
-    keyfile = "/home/dong.guo/workspace/sshkeys/adsymp"
+    keyfile = "/home/adsymp/.ssh/id_rsa"
     
     myfab = FabricSupport()
     return myfab.execute(host,task,user,keyfile)
@@ -81,9 +82,10 @@ class FabricSupport(object):
         self.gateway = opts['gateway']
         self.cpu = opts['cpu']
         self.memory = opts['memory']
+        self.disk = opts['disk']
 
     def execute(self,host,task,user,keyfile):
-        env.parallel = True
+        env.parallel = False
         env.user = user
         env.key_filename = keyfile
 
@@ -91,26 +93,40 @@ class FabricSupport(object):
         exec get_task
         
         with settings(warn_only=True):
-            with hide('warnings', 'running', 'stdout', 'stderr'):
-                return execute(task,host=host)[host]
+            return execute(task,host=host)[host]
 
     def clone(self):
-        sr_uuid = sudo("""xe sr-list |grep -A 2 -B 3 -w %s |grep -A 4 -B 1 "Local storage" |grep -w uuid |awk -F ":" '{print $2}'""" % (self.server))
+        print "Choosing the storage has most available spaces..."
+        sr_items = sudo("""xe sr-list |grep -A2 -B3 -w %s |grep -A1 -B4 -Ew 'lvm|ext' |grep -w name-label |awk -F ": " '{print $2}'""" % (self.server))
+        sr_disk = 0
+        for item in sr_items.splitlines():
+            item_uuid = sudo("""xe sr-list |grep -A2 -B3 -w %s |grep -B1 -w '%s' |grep -w uuid |awk -F ": " '{print $2}'""" % (self.server,item))
+            t_disk = sudo("""xe sr-param-list uuid={0} |grep physical-size |cut -d: -f2""".format(item_uuid))
+            u_disk = sudo("""xe sr-param-list uuid={0} |grep physical-utilisation |cut -d: -f2""".format(item_uuid))
+            f_disk = int(t_disk) - int(u_disk)
+            if f_disk > sr_disk:
+                sr_disk = f_disk
+                sr_name = item
+                sr_uuid = item_uuid
 
-        print "Copying the vm:{0} from template:{1}...".format(self.hostname,self.template)
+        print "Copying the vm:{0} from template:{1} on storage:'{2}'...".format(self.hostname,self.template,sr_name)
         vm_uuid = sudo("""xe vm-copy new-name-label={0} vm={1} sr-uuid={2}""".format(self.hostname,self.template,sr_uuid))
         if vm_uuid.failed:
-            print "Failed to copy vm: {0}".format(self.hostname)
+            print "Failed to copy vm:{0}".format(self.hostname)
             return False
         
         print "Setting up the bootloader,vcpus,memory of vm:{0}...".format(self.hostname)
-        sudo('''xe vm-param-set uuid={0} HVM-boot-policy=""''').format(vm_uuid)
-        sudo('''xe vm-param-set uuid={0} PV-bootloader="pygrub"''').format(vm_uuid)
+        sudo('''xe vm-param-set uuid={0} HVM-boot-policy=""'''.format(vm_uuid))
+        sudo('''xe vm-param-set uuid={0} PV-bootloader="pygrub"'''.format(vm_uuid))
 
-        sudo('''xe vm-param-set VCPUs-max={0} uuid={1}''').format(self.cpu,vm_uuid)
-        sudo('''xe vm-param-set VCPUs-at-startup={0} uuid={1}''').format(self.cpu,vm_uuid)
+        sudo('''xe vm-param-set VCPUs-max={0} uuid={1}'''.format(self.cpu,vm_uuid))
+        sudo('''xe vm-param-set VCPUs-at-startup={0} uuid={1}'''.format(self.cpu,vm_uuid))
 
-        sudo('''xe vm-memory-limits-set uuid={0} dynamic-min={1}iB dynamic-max={1}iB static-min={1}iB static-max={1}iB''').format(vm_uuid,self.memory)
+        sudo('''xe vm-memory-limits-set uuid={0} dynamic-min={1}iB dynamic-max={1}iB static-min={1}iB static-max={1}iB'''.format(vm_uuid,self.memory))
+
+        print "Setting up the disk size of vm:{0}...".format(self.hostname)
+        vdi_uuid = sudo("""xe vm-disk-list vm=%s |grep -B2 '%s' |grep -w uuid |awk '{print $5}'""" % (self.hostname,sr_name))
+        sudo('''xe vdi-resize uuid={0} disk-size={1}iB'''.format(vdi_uuid,self.disk))
 
         print "Setting up the network of vm:{0}...".format(self.hostname)
         sudo('''xe vm-param-set uuid={0} PV-args="_hostname={1} _ipaddr={2} _netmask={3} _gateway={4}"'''.format(vm_uuid,self.hostname,self.ipaddr,self.netmask,self.gateway))
@@ -118,7 +134,7 @@ class FabricSupport(object):
         print "Starting vm:{0}...".format(self.hostname)
         vm_start = sudo('''xe vm-start uuid={0}'''.format(vm_uuid))
         if vm_start.failed:
-            print "Failed to start vm: {0}".format(self.hostname)
+            print "Failed to start vm:{0}".format(self.hostname)
             return False
         return True
 
@@ -133,10 +149,11 @@ if __name__=='__main__':
     isup(opts['server'])
 
     # clone
-    if opts['filename'] != None:
+    if opts['filename']:
         for i in fileinput.input(opts['filename']):
             a = i.split(',')
-            opts = {'server':opts['server'], 'template':a[0], 'hostname':a[1], 'ipaddr':a[2], 'netmask':a[3], 'gateway':a[4], 'cpu':a[5], 'memory':a[6]}
+            opts = {'server':opts['server'], 'template':a[0], 'hostname':a[1], 'ipaddr':a[2], 
+                    'netmask':a[3], 'gateway':a[4], 'cpu':a[5], 'memory':a[6], 'disk':a[7]}
             fab_execute(opts['server'],"clone")
         sys.exit(0)
     fab_execute(opts['server'],"clone")
