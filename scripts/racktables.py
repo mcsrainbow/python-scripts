@@ -359,7 +359,7 @@ if __name__=='__main__':
      
     # get info
     print "========================================"
-    print "Getting information from '{0}'...".format(opts['hostname'])
+    print "Getting informations from '{0}'...".format(opts['hostname'])
     print "========================================"
     info = sum_info()
 
