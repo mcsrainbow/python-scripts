@@ -7,7 +7,13 @@
 import os
 import sys
 import fileinput
-from fabric.api import env,execute,cd,sudo,run,hide,settings
+
+# import fabric api to run commands remotely
+try:
+    from fabric.api import env, execute, cd, sudo, run, hide, settings
+except ImportError:
+    sys.stderr.write("ERROR: Requires Fabric, try 'pip install fabric'.\n")
+    sys.exit(1)
 
 def parse_opts():
     """Help messages (-h, --help)"""
