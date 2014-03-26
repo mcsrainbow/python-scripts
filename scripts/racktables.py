@@ -18,15 +18,27 @@ except ImportError:
 
 def parse_opts():
     """Help messages (-h, --help) for racktables.py"""
-
+    
+    import textwrap
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(
+        '''
+        examples:
+          {0} hmr1
+          {0} hmr1 -w
+          {0} hmr1 -w -r SC2:P3:C21:1
+          {0} sc2-vm1001 -w -r SC2:P3:C9:1,2
+        '''.format(__file__)
+        ))
     parser.add_argument('hostname', action="store", type=str)
     parser.add_argument('-w', action="store_true", default=False,help='write to database')
+    parser.add_argument('-r', metavar='rackspace', type=str, help='rackspace informations')
 
     args = parser.parse_args()
-    return {'hostname':args.hostname, 'write':args.w}
+    return {'hostname':args.hostname, 'write':args.w, 'rackspace':args.r}
 
 def isup(host):
     """Check if host is up"""
@@ -318,27 +330,61 @@ def update_db(info):
     print "OK - Updated attributes"
 
     # ec2 servers don't need to update the ip pool
-    if info['server_type'] in ["EC2"]:
-        return True
-
-    # update the ip pool
-    nics = ("".join(info['network'].split())).split(',')
-    for i in nics:
-        nic_info = i.split(':')
-        nic_name = "".join(nic_info[0:1])
-        nic_addr = "".join(nic_info[1:2])
-        # check if nic_name is not correct
-        if nic_name.isalnum():
-            # create nic
-            url = """'http://{0}/racktables/index.php?module=redirect&page=object&tab=ip&op=add' \
+    if info['server_type'] not in ["EC2"]:
+        # update the ip pool
+        nics = ("".join(info['network'].split())).split(',')
+        for i in nics:
+            nic_info = i.split(':')
+            nic_name = "".join(nic_info[0:1])
+            nic_addr = "".join(nic_info[1:2])
+            # check if nic_name is not correct
+            if nic_name.isalnum():
+                # create nic
+                url = """'http://{0}/racktables/index.php?module=redirect&page=object&tab=ip&op=add' \
 --data 'object_id={1}&bond_name={2}&ip={3}&bond_type=regular&submit.x=11&submit.y=6'"""\
-                .format(rt_server,object_id,nic_name,nic_addr)
+                    .format(rt_server,object_id,nic_name,nic_addr)
+                cmd = "{0} {1}".format(curl,url)
+                status, output = commands.getstatusoutput(cmd)
+                if status != 0:
+                    print "Failed to update ip pool for {0}:{1}".format(nic_name,nic_addr)
+                    return False
+                print "OK - Updated ip pool for {0}:{1}".format(nic_name,nic_addr)
+
+    # virtual servers don't need to update the rackspace
+    if info['server_type'] not in ["EC2","VM"]:
+        # update the rackspace
+        if opts['rackspace']:
+            rs_info = opts['rackspace'].split(':')
+            colo = "".join(rs_info[0:1])
+            row  = "".join(rs_info[1:2])
+            rack = "".join(rs_info[2:3])
+            atom = "".join(rs_info[3:4])
+            if not atom:
+                print "The rackspace is not correct"
+                return False 
+    
+            # get rack_id
+            for item in db.query("select * from Rack where name = '{0}' and location_name = '{1}' and row_name = '{2}'".format(rack,colo,row)):
+                rack_id = item.id
+            if not rack_id:
+                print "Faild to get rack_id"
+                return False
+            
+            atom_list = atom.split(',')
+            atom_data  = []
+            for i in atom_list:
+               atom_data.append("&atom_{0}_{1}_0=on&atom_{0}_{1}_1=on&atom_{0}_{1}_2=on".format(rack_id,i))
+            atom_url = "".join(atom_data) 
+    
+            url = """'http://{0}/racktables/index.php?module=redirect&page=object&tab=rackspace&op=updateObjectAllocation' \
+--data 'object_id={1}&rackmulti%5B%5D={2}&comment=&got_atoms=Save{3}'"""\
+                .format(rt_server,object_id,rack_id,atom_url)
             cmd = "{0} {1}".format(curl,url)
             status, output = commands.getstatusoutput(cmd)
             if status != 0:
-                print "Failed to update ip pool for {0}:{1}".format(nic_name,nic_addr)
+                print "Failed to update rackspace"
                 return False
-            print "OK - Updated ip pool for {0}:{1}".format(nic_name,nic_addr)
+            print "OK - Updated rackspace"
            
     # close db
     db.close()
