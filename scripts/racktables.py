@@ -153,7 +153,7 @@ class FabricSupport(object):
         return rst_name
 
     def get_rst_name(self):
-        colo_prefix = run("""hostname -s |egrep 'sc2-|iad2-' |cut -d- -f1""")
+        colo_prefix = run("""hostname -s |egrep 'idc1-|idc2-' |cut -d- -f1""")
         if colo_prefix.succeeded:
             xs = colo_prefix + '-vm1001'
             rst_name = fab_execute(xs,'get_rst_on')
@@ -240,7 +240,7 @@ def update_db(info):
         sys.exit(1)
     
     # racktables server address, username, password with curl command
-    rt_server = "sc2-rackmonkey"
+    rt_server = "idc1-racktables"
     curl = "curl -s -u admin:racktables"
 
     # connect to racktables db
