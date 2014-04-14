@@ -27,10 +27,10 @@ def parse_opts():
         description=textwrap.dedent(
         '''
         examples:
-          {0} hmr1
-          {0} hmr1 -w
-          {0} hmr1 -w -r SC2:P3:C21:1
-          {0} sc2-vm1001 -w -r SC2:P3:C9:1,2
+          {0} idc1-server1
+          {0} idc1-server1 -w
+          {0} idc1-server1 -w -r IDC1:P3:C21:1
+          {0} idc2-server1 -w -r IDC2:P3:C9:1,2
         '''.format(__file__)
         ))
     parser.add_argument('hostname', action="store", type=str)
@@ -57,8 +57,8 @@ def isup(host):
 def fab_execute(host,task):
     """Execute the task in class FabricSupport."""
 
-    user = "adsymp"
-    keyfile = "/home/adsymp/.ssh/id_rsa"
+    user = "heydevops"
+    keyfile = "/home/heydevops/.ssh/id_rsa"
     
     # execute the given task
     myfab = FabricSupport()

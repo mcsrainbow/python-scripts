@@ -26,12 +26,12 @@ def parse_opts():
         description=textwrap.dedent(
         '''
         examples:
-          {0} -s iad2-vm1003 -f iad2-vm1003.list
-          {0} -s iad2-vm1003 -t t_c64_min -n iad2-ads21 -i 172.16.8.65 -e 255.255.252.0 -g 172.16.8.1 -c 4 -m 8G -d 50G
+          {0} -s idc1-server3 -f idc1-server3.list
+          {0} -s idc1-server3 -t t_c64_min -n idc2-server21 -i 10.100.1.65 -e 255.255.252.0 -g 10.100.1.1 -c 4 -m 8G -d 50G
 
-          iad2-vm1003.list:
-            t_c64_min,iad2-ads21,172.16.8.65,255.255.252.0,172.16.8.1,4,8G,50G,
-            t_c64_min,iad2-ads41,172.16.8.66,255.255.252.0,172.16.8.1,4,8G,50G,
+          idc1-server3.list:
+            t_c64_min,idc2-server21,10.100.1.65,255.255.252.0,10.100.1.1,4,8G,50G,
+            t_c64_min,idc2-server41,10.100.1.66,255.255.252.0,10.100.1.1,4,8G,50G,
             ...
         '''.format(__file__)
         ))
@@ -70,8 +70,8 @@ def isup(host):
 def fab_execute(host,task):
     """Execute the task in class FabricSupport."""
 
-    user = "adsymp"
-    keyfile = "/home/adsymp/.ssh/id_rsa"
+    user = "heydevops"
+    keyfile = "/home/heydevops/.ssh/id_rsa"
     
     myfab = FabricSupport()
     return myfab.execute(host,task,user,keyfile)
