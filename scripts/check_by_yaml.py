@@ -98,7 +98,7 @@ def check_value(value):
         print "CRIT. The value of {0}: {1} is greater than {2}".format(opts['key'],value,opts['crit'])
         sys.exit(STATE_CRITICAL)
     
-    print "OK. The value of {0}: {1} is".format(opts['key'],value)
+    print "OK. The value of {0}: {1}".format(opts['key'],value)
     sys.exit(STATE_OK)
 
 if __name__=='__main__':
