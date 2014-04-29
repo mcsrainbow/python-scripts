@@ -48,8 +48,8 @@ def parse_opts():
 
     parser.add_argument('-f', metavar='file', type=str, required=True, help='the absolute path of yaml file')
     parser.add_argument('-k', metavar='key', type=str, required=True, help='key name')
-    parser.add_argument('-w', metavar='warn', type=str, required=True, help='threshold of warn')
-    parser.add_argument('-c', metavar='crit', type=str, required=True, help='threshold of critical')
+    parser.add_argument('-w', metavar='warn', type=int, required=True, help='threshold of warn')
+    parser.add_argument('-c', metavar='crit', type=int, required=True, help='threshold of critical')
     parser.add_argument('-p', metavar='regex', type=str, help='regular expression pattern')
 
     args = parser.parse_args()
@@ -90,11 +90,11 @@ def check_value(value):
             print "The value doesn't match the given regex pattern."
             sys.exit(STATE_WARNING)
 
-    if value > int(opts['warn']) and value < int(opts['crit']):
+    if value > opts['warn'] and value < opts['crit']:
         print "WARN. The value of {0}: {1} is greater than {2}".format(opts['key'],value,opts['warn'])
         sys.exit(STATE_WARNING)
 
-    if value > int(opts['crit']):
+    if value > opts['crit']:
         print "CRIT. The value of {0}: {1} is greater than {2}".format(opts['key'],value,opts['crit'])
         sys.exit(STATE_CRITICAL)
     
