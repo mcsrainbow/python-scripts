@@ -49,7 +49,7 @@ def whichReverseZone(ipaddr):
 	else:
 		return None
 
-def.comtLastNumber(ipaddr):
+def comtLastNumber(ipaddr):
 	tup = ipaddr.rpartition('.')
 	
 	return tup[2] if tup else -1
@@ -166,7 +166,7 @@ def update_ptr(args, f):
 			print "Could not find zone for %s" % args.name	
 			sys.exit(1)
 	
-		last =.comtLastNumber(args.name)
+		last = comtLastNumber(args.name)
 
 		if int(last) >= 0 and int(last) <= 255:	
 			entry = last + "." + rev_zone + "."
