@@ -72,7 +72,7 @@ def get_value(opts):
         try:
             value = value[eachkey]
         except KeyError:
-            sys.stderr.write("No such key '{0}'\n".format(opts['key']))
+            sys.stderr.write("No such key: '{0}'\n".format(opts['key']))
             sys.exit(STATE_UNKNOWN)
 
     info.close()
