@@ -87,7 +87,7 @@ def check_value(value):
 
     if opts['regex']:
         if not re.match(opts['regex'],str(value)):
-            print "The value doesn't match the given regex pattern."
+            print "WARN. The value of {0}: '{1}' doesn't match the given regex pattern: '{2}'.".format(opts['key'],value,opts['regex'])
             sys.exit(STATE_WARNING)
 
     if value > opts['warn'] and value < opts['crit']:
