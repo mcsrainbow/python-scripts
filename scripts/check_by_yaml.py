@@ -87,7 +87,7 @@ def check_value(value):
 
     if opts['regex']:
         if not re.match(opts['regex'],str(value)):
-            print "The value doesn't match the regex pattern."
+            print "The value doesn't match the given regex pattern."
             sys.exit(STATE_WARNING)
 
     if value > int(opts['warn']) and value < int(opts['crit']):
