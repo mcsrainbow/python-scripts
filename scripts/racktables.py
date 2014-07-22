@@ -2,7 +2,7 @@
 #-*- coding:utf-8 -*-
 
 # Author: Dong Guo
-# Last Modified: 2013/12/15
+# Last Modified: 2014/07/22
 
 import os
 import sys
@@ -28,17 +28,22 @@ def parse_opts():
         '''
         examples:
           {0} idc1-server1
+          {0} idc1-server1 -r
+          {0} idc1-server1 -d
           {0} idc1-server1 -w
-          {0} idc1-server1 -w -r IDC1:P3:C21:1
-          {0} idc2-server1 -w -r IDC2:P3:C9:1,2
+          {0} idc1-server1 -w -s IDC1:P1:C1:1
+          {0} idc2-server2 -w -s IDC2:P2:C2:1,2
         '''.format(__file__)
         ))
+    exclusion = parser.add_mutually_exclusive_group()
     parser.add_argument('hostname', action="store", type=str)
-    parser.add_argument('-w', action="store_true", default=False,help='write to database')
-    parser.add_argument('-r', metavar='rackspace', type=str, help='rackspace informations')
+    exclusion.add_argument('-r', action="store_true", default=False,help='read from database')
+    exclusion.add_argument('-d', action="store_true", default=False,help='delete from database')
+    exclusion.add_argument('-w', action="store_true", default=False,help='write to database')
+    parser.add_argument('-s', metavar='rackspace', type=str, help='rackspace informations')
 
     args = parser.parse_args()
-    return {'hostname':args.hostname, 'write':args.w, 'rackspace':args.r}
+    return {'hostname':args.hostname, 'read':args.r, 'delete':args.d, 'write':args.w, 'rackspace':args.s}
 
 def isup(host):
     """Check if host is up"""
@@ -51,14 +56,15 @@ def isup(host):
         conn.connect((host,22))
         conn.close()
     except:
-        print "Connect to host {0} port 22: Network is unreachable".format(host)
-        sys.exit(1)
+        print "Failed to connect to host {0} port 22: Network is unreachable".format(host)
+        return False
+    return True
 
 def fab_execute(host,task):
     """Execute the task in class FabricSupport."""
 
-    user = "heydevops"
-    keyfile = "/home/heydevops/.ssh/id_rsa"
+    user = "username"
+    keyfile = "/home/username/.ssh/id_rsa"
     
     # execute the given task
     myfab = FabricSupport()
@@ -155,7 +161,7 @@ class FabricSupport(object):
     def get_rst_name(self):
         colo_prefix = run("""hostname -s |egrep 'idc1-|idc2-' |cut -d- -f1""")
         if colo_prefix.succeeded:
-            xs = colo_prefix + '-vm1001'
+            xs = colo_prefix + '-xenhost1'
             rst_name = fab_execute(xs,'get_rst_on')
         return rst_name
 
@@ -225,6 +231,53 @@ def sum_info():
             'memory':memory,'swap':swap, 'cpu_cores':cpu_info['cpu_cores'], 'cpu_type':cpu_info['cpu_type'],
             'disk':disk,'network':network, 'vm_list':vm_list, 'resident_on':xs_name, 'ec2_pubname':ec2_pubname}
 
+def read_db(info):
+    """Get info from Racktables DB"""
+    
+    # torndb is a lightweight wrapper around MySQLdb
+    try:
+        from torndb import Connection
+    except ImportError:
+        sys.stderr.write("ERROR: Requires torndb, try 'yum install MySQL-python' then 'pip install torndb'.\n")
+        sys.exit(1)
+
+    # racktables server address, username, password with curl command
+    rt_server = "racktables-website"
+
+    # connect to racktables db
+    db = Connection(rt_server,"dbname","username","password")
+
+    # check if object_id already exists
+    object_id = ""
+    for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
+        object_id = item.id
+    if not object_id:
+        print "Object:{0} does not exist".format(info['hostname'])
+        return False
+    
+    # get the location info
+    rack_id_list = []
+    unit_no_list = []
+    for item in db.query("select rack_id,unit_no from RackSpace where object_id=(select id from Object where name='{0}')".format(info['hostname'])):
+        rack_id_list.append(int(item.rack_id))
+        unit_no_list.append(int(item.unit_no))
+    if not item:
+        print "Object:{0} does not have location info".format(info['hostname'])
+        return False
+    rack_id = ','.join(str(i) for i in list(set(rack_id_list)))
+    unit_no = ','.join(str(i) for i in list(set(unit_no_list)))
+
+    for item in db.query("select location_name,row_name,name from Rack where id='{0}'".format(rack_id)):
+        location_name = item.location_name
+        row_name = item.row_name
+        rack_name = item.name
+    print "RACKSPACE:   {0}:{1}:{2}:{3}".format(location_name,row_name,rack_name,unit_no)
+
+    # close db
+    db.close()
+
+    return {'location_name':location_name, 'row_name':row_name, 'rack_name':rack_name, 'unit_no':unit_no}
+
 def update_db(info):
     """Automate server audit into Racktables"""
     
@@ -240,11 +293,11 @@ def update_db(info):
         sys.exit(1)
     
     # racktables server address, username, password with curl command
-    rt_server = "idc1-racktables"
-    curl = "curl -s -u admin:racktables"
+    rt_server = "racktables-website"
+    curl = "curl -s -u username:password"
 
     # connect to racktables db
-    db = Connection(rt_server,"racktables_db","racktables_user","racktables")
+    db = Connection(rt_server,"dbname","username","password")
 
     # get object_type_id
     for item in db.query("select * from Dictionary where dict_value='{0}'".format(info['server_type'])):
@@ -254,33 +307,34 @@ def update_db(info):
     object_id = ""
     for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
         object_id = item.id
-    if not object_id:
-        # create object
-        if info['server_type'] in ["Server","XenServer"]:
-            url = """'http://{0}/racktables/index.php?module=redirect&page=depot&tab=addmore&op=addObjects' \
+
+    # delete object if already exists
+    delete_object(info)   
+ 
+    # create object
+    if info['server_type'] in ["Server","XenServer"]:
+        url = """'http://{0}/racktables/index.php?module=redirect&page=depot&tab=addmore&op=addObjects' \
 --data '0_object_type_id={1}&0_object_name={2}&0_object_label=&0_object_asset_no={2}&got_fast_data=Go%21'"""\
-                   .format(rt_server,object_type_id,info['hostname'])
-        if info['server_type'] in ["VM","EC2"]:
-            url = """'http://{0}/racktables/index.php?module=redirect&page=depot&tab=addmore&op=addObjects' \
+               .format(rt_server,object_type_id,info['hostname'])
+    if info['server_type'] in ["VM","EC2"]:
+        url = """'http://{0}/racktables/index.php?module=redirect&page=depot&tab=addmore&op=addObjects' \
 --data 'virtual_objects=&0_object_type_id={1}&0_object_name={2}&got_fast_data=Go%21'"""\
-                   .format(rt_server,object_type_id,info['hostname'])
+               .format(rt_server,object_type_id,info['hostname'])
 
-        cmd = "{0} {1}".format(curl,url)
-        status, output = commands.getstatusoutput(cmd)
-        if status != 0:
-            print "Failed to created object: {0}".format(info['hostname'])
-            return False
-        else:
-            print "OK - Created object: {0}".format(info['hostname'])
-
-        # get object_id
-        for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
-            object_id = item.id
-        if not object_id:
-            print "Faild to get object_id"
-            return False
+    cmd = "{0} {1}".format(curl,url)
+    status, output = commands.getstatusoutput(cmd)
+    if status != 0:
+        print "Failed to created object: {0}".format(info['hostname'])
+        return False
     else:
-        print "Object:'{0}' already exists".format(info['hostname'])
+        print "OK - Created object: {0}".format(info['hostname'])
+
+    # get object_id
+    for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
+        object_id = item.id
+    if not object_id:
+        print "Faild to get object_id"
+        return False
 
     # get os_release_id
     os_release_key = ""
@@ -392,6 +446,42 @@ def update_db(info):
     # end
     return True
 
+def delete_object(info):
+    """Delete object from DB"""
+
+    # torndb is a lightweight wrapper around MySQLdb
+    try:
+        from torndb import Connection
+    except ImportError:
+        sys.stderr.write("ERROR: Requires torndb, try 'yum install MySQL-python' then 'pip install torndb'.\n")
+        sys.exit(1)
+    
+    # racktables server address, username, password with curl command
+    rt_server = "racktables-website"
+    curl = "curl -s -u username:password"
+
+    # connect to racktables db
+    db = Connection(rt_server,"dbname","username","password")
+
+    # check if object_id already exists, then create object if not
+    object_id = ""
+    for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
+        object_id = item.id
+
+    # delete object if already exists
+    if object_id:
+        url = """'http://{0}/racktables/index.php?module=redirect&op=deleteObject&page=depot&tab=addmore&object_id={1}'"""\
+                  .format(rt_server,object_id)
+        cmd = "{0} {1}".format(curl,url)
+        status, output = commands.getstatusoutput(cmd)
+        if status != 0:
+            print "Failed to delete the existing object: {0}".format(info['hostname'])
+            return False
+        else:
+            print "OK - Deleted the existing object: {0}".format(info['hostname'])
+    
+    return True
+
 if __name__=='__main__':
     # show help messages if no parameter
     argv_len = len(sys.argv)
@@ -401,17 +491,34 @@ if __name__=='__main__':
     opts = parse_opts()
     
     # check if host is up
-    isup(opts['hostname'])
-     
-    # get info
-    print "========================================"
-    print "Getting informations from '{0}'...".format(opts['hostname'])
-    print "========================================"
-    info = sum_info()
+    hostup = isup(opts['hostname'])
+    
+    if hostup: 
+        # get info
+        print "========================================"
+        print "Getting informations from '{0}'...".format(opts['hostname'])
+        print "========================================"
+        info = sum_info()
 
-    # update racktables
-    if opts['write']:
+        # update racktables
+        if opts['write']:
+            print "========================================"
+            print "Updating racktables..." 
+            print "========================================"
+            update_db(info)
+    else:
+        info = {'hostname':opts['hostname']}
+
+    # read racktables
+    if opts['read']:
         print "========================================"
-        print "Updating racktables..." 
+        print "Getting informations from DB..." 
         print "========================================"
-        update_db(info)
+        read_db(info)
+
+    # delete object from db
+    if opts['delete']:
+        print "========================================"
+        print "Deleting Object: '{0}' from DB...".format(opts['hostname'])
+        print "========================================"
+        delete_object(info)
