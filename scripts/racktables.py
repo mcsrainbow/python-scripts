@@ -134,7 +134,7 @@ class FabricSupport(object):
         return {'cpu_cores':cpu_cores, 'cpu_type':cpu_type}
 
     def get_disk(self):
-        disk = sudo("""fdisk -l 2>/dev/null |grep -v "/dev/mapper" |grep "Disk /dev" |awk '{print $2" "$3" "$4}'|grep -Ev '^$|^doesn' |xargs""")
+        disk = sudo("""fdisk -l 2>/dev/null |grep -v "/dev/mapper" |grep "Disk /dev" |awk '{print $2" "$3" "$4}'|grep -Ev '^$|^doesn' |sort |xargs""")
         return disk
 
     def get_network(self):
