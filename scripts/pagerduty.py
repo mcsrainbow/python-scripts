@@ -23,7 +23,7 @@ date_format = "%Y-%m-%d"
 time_format = "%Y-%m-%dT%H:%M:%S"
 
 def parse_opts():
-    """Help messages(-h, --help)."""
+    """Help messages(-h, --help)"""
     import textwrap
     import argparse
 
@@ -45,7 +45,7 @@ def parse_opts():
     return {'days':args.d, 'date':args.s}
 
 class TokenAuth(requests.auth.AuthBase):
-    """Attaches PagerDuty Token Authentication to the given Request object."""
+    """Attaches PagerDuty Token Authentication to the given Request object"""
     def __init__(self, token):
         self.token = token
 
@@ -54,7 +54,7 @@ class TokenAuth(requests.auth.AuthBase):
         return req
 
 def prettify(object):
-    '''Format JSON in human-readable form.'''
+    '''Format JSON in human-readable form'''
     return json.dumps(object,indent=1)
 
 def get_incidents(start_date,end_date):
@@ -71,6 +71,8 @@ def get_incident_by_id(id):
     return req.json()
 
 def get_log_entries_by_incident(incid):
+    '''Get log entries by incident id'''
+
     from datetime import datetime
 
     headers = {
@@ -115,6 +117,8 @@ def get_log_entries_by_incident(incid):
     return {'time_bet': time_bet_1stalert_and_1stack, 'num_noti': str(od_number_of_notifications), 'num_acks': str(od_number_of_acks), 'res_method': res_method}
 
 def get_reports(date,days,opts):
+    '''Get detailed reports'''
+
     start_date = (date - datetime.timedelta(days=days+1)).strftime(date_format)
     end_date = (date - datetime.timedelta(days=days)).strftime(date_format)
     info = get_incidents(start_date,end_date)
