@@ -71,8 +71,6 @@ def get_incident_by_id(id):
     return req.json()
 
 def get_log_entries_by_incident(incid):
-    ''' Get log entries by incident id'''
-
     from datetime import datetime
 
     headers = {
@@ -117,8 +115,6 @@ def get_log_entries_by_incident(incid):
     return {'time_bet': time_bet_1stalert_and_1stack, 'num_noti': str(od_number_of_notifications), 'num_acks': str(od_number_of_acks), 'res_method': res_method}
 
 def get_reports(date,days,opts):
-    ''' Get detailed reports by date or number of days '''
-
     start_date = (date - datetime.timedelta(days=days+1)).strftime(date_format)
     end_date = (date - datetime.timedelta(days=days)).strftime(date_format)
     info = get_incidents(start_date,end_date)
@@ -145,7 +141,7 @@ def get_reports(date,days,opts):
             number_of_acks = extra_info['num_acks']
             res_method = extra_info['res_method']
 
-            details = details + "id:{0} host:{1} subject:{2} \n escalates_num:{3} \n time_bet_1stAlert_and1stAck:{4} \n number_of_notifications:{5} \n number_of_acks:{6} \n resolve_by:{7}\n"\
+            details = details + "id: {0}  host: {1}  subject: {2} \n escalates_num: {3} \n time_bet_1stAlert_and1stAck: {4} \n number_of_notifications: {5} \n number_of_acks: {6} \n resolve_by: {7}\n"\
                       .format(incid,inchost,subject,escanum,time_bet_1stalert_and_1stack,number_of_notifications,number_of_acks,res_method)
 
     return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'details':details}
@@ -163,13 +159,13 @@ if __name__=='__main__':
             date = datetime.datetime.today()
             reports = get_reports(date,days,opts)
             print "date: {0}".format(reports['date'])
-            print "total:{0}  byservice:{1}  byhost:{2}".format(reports['total'],reports['byservice'],reports['byhost'])
+            print "total: {0}  byservice: {1}  byhost: {2}".format(reports['total'],reports['byservice'],reports['byhost'])
     elif opts['date']:
         if re.match(daterex,opts['date']):
             date = datetime.datetime.strptime(opts['date'],"%Y-%m-%d")
             reports = get_reports(date,-1,opts)
             print "date: {0}".format(reports['date'])
-            print "total:{0}  byservice:{1}  byhost:{2}".format(reports['total'],reports['byservice'],reports['byhost'])
+            print "total: {0}  byservice: {1}  byhost: {2}".format(reports['total'],reports['byservice'],reports['byhost'])
             print "{0}".format(reports['details'])
         else:
             print "The date is incorrect"
