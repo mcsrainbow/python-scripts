@@ -126,17 +126,23 @@ def get_reports(date,days,opts):
     byservice = 0
     byhost = 0
     details = ""
+    byemail = 0
     for incident in info['incidents']:
-        inchost = incident['trigger_summary_data']['HOSTNAME']
         escanum = incident['number_of_escalations']
         incid = incident['id']
 
-        if incident['trigger_summary_data']['pd_nagios_object'] == "service":
-            byservice = byservice + 1
-            subject = incident['trigger_summary_data']['SERVICEDESC']
-        elif incident['trigger_summary_data']['pd_nagios_object'] == "host":
-            byhost = byhost + 1
-            subject = "DOWN"
+        if incident['trigger_type'] == "email_trigger":
+            inchost = "byEmail"
+            byemail = byemail + 1
+            subject = incident['trigger_summary_data']['subject']
+        else:
+            inchost = incident['trigger_summary_data']['HOSTNAME']
+            if incident['trigger_summary_data']['pd_nagios_object'] == "service":
+                byservice = byservice + 1
+                subject = incident['trigger_summary_data']['SERVICEDESC']
+            elif incident['trigger_summary_data']['pd_nagios_object'] == "host":
+                byhost = byhost + 1
+                subject = "DOWN"
 
         if not opts['days']:
             extra_info = get_log_entries_by_incident(incid)
@@ -145,10 +151,10 @@ def get_reports(date,days,opts):
             number_of_acks = extra_info['num_acks']
             res_method = extra_info['res_method']
 
-            details = details + "id: {0}  host: {1}  subject: {2} \n escalates_num: {3} \n time_bet_1stAlert_and1stAck: {4} \n number_of_notifications: {5} \n number_of_acks: {6} \n resolve_by: {7}\n"\
+            details = details + "id: {0}  host: {1}  subject: {2}\n  escalates_num: {3}\n  time_bet_1stAlert_and1stAck: {4}\n  number_of_notifications: {5}\n  number_of_acks: {6}\n  resolve_by: {7}\n"\
                       .format(incid,inchost,subject,escanum,time_bet_1stalert_and_1stack,number_of_notifications,number_of_acks,res_method)
 
-    return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'details':details}
+    return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'byemail':byemail,'details':details}
 
 if __name__=='__main__':
     argv_len = len(sys.argv)
@@ -163,13 +169,13 @@ if __name__=='__main__':
             date = datetime.datetime.today()
             reports = get_reports(date,days,opts)
             print "date: {0}".format(reports['date'])
-            print "total: {0}  byservice: {1}  byhost: {2}".format(reports['total'],reports['byservice'],reports['byhost'])
+            print "total: {0}  byservice: {1}  byhost: {2}  byemail: {3}".format(reports['total'],reports['byservice'],reports['byhost'],reports['byemail'])
     elif opts['date']:
         if re.match(daterex,opts['date']):
             date = datetime.datetime.strptime(opts['date'],"%Y-%m-%d")
             reports = get_reports(date,-1,opts)
             print "date: {0}".format(reports['date'])
-            print "total: {0}  byservice: {1}  byhost: {2}".format(reports['total'],reports['byservice'],reports['byhost'])
+            print "total: {0}  byservice: {1}  byhost: {2}  byemail: {3}".format(reports['total'],reports['byservice'],reports['byhost'],reports['byemail'])
             print "{0}".format(reports['details'])
         else:
             print "The date is incorrect"
