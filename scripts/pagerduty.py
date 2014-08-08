@@ -16,7 +16,7 @@ import re
 import calendar
 import requests
 
-api_url = "https://YOUR-DOMAIN.pagerduty.com/api/v1/"
+api_url = "https://YOUR-SUBDOMAIN.pagerduty.com/api/v1/"
 api_token = "YOUR-API-TOKEN"
 
 date_format = "%Y-%m-%d"
@@ -127,10 +127,14 @@ def get_reports(date,days,opts):
     byhost = 0
     details = ""
     byemail = 0
+
+    rbynagios = 0
+    rbytimeout = 0
+    rbyhuman = 0
     for incident in info['incidents']:
         escanum = incident['number_of_escalations']
         incid = incident['id']
-
+        
         if incident['trigger_type'] == "email_trigger":
             inchost = "byEmail"
             byemail = byemail + 1
@@ -144,17 +148,24 @@ def get_reports(date,days,opts):
                 byhost = byhost + 1
                 subject = "DOWN"
 
+        extra_info = get_log_entries_by_incident(incid)
+        res_method = extra_info['res_method']
+        if res_method == "nagios":
+            rbynagios = rbynagios + 1
+        if res_method == "timeout":
+            rbytimeout = rbytimeout + 1
+        if res_method == "website":
+            rbyhuman = rbyhuman + 1
+
         if not opts['days']:
-            extra_info = get_log_entries_by_incident(incid)
             time_bet_1stalert_and_1stack = extra_info['time_bet']
             number_of_notifications = extra_info['num_noti']
             number_of_acks = extra_info['num_acks']
-            res_method = extra_info['res_method']
 
-            details = details + "  id: {0}  host: {1}  subject: {2}\n    escalates_num: {3}\n    time_bet_1stAlert_and1stAck: {4}\n    number_of_notifications: {5}\n    number_of_acks: {6}\n    resolve_by: {7}\n"\
+            details = details + "\nid: {0}  host: {1}  subject: {2}\n  escalates_num: {3}\n  time_bet_1stAlert_and1stAck: {4}\n  number_of_notifications: {5}\n  number_of_acks: {6}\n  resolve_by: {7}\n"\
                       .format(incid,inchost,subject,escanum,time_bet_1stalert_and_1stack,number_of_notifications,number_of_acks,res_method)
 
-    return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'byemail':byemail,'details':details}
+    return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'byemail':byemail,'details':details, 'rbynagios':rbynagios, 'rbytimeout':rbytimeout, 'rbyhuman':rbyhuman }
 
 if __name__=='__main__':
     argv_len = len(sys.argv)
@@ -168,14 +179,16 @@ if __name__=='__main__':
         for days in range(opts['days']):
             date = datetime.datetime.today()
             reports = get_reports(date,days,opts)
-            print "date: {0}".format(reports['date'])
-            print "  total: {0}  byservice: {1}  byhost: {2}  byemail: {3}".format(reports['total'],reports['byservice'],reports['byhost'],reports['byemail'])
+            print "DATE: {0}  TOTAL: {1}".format(reports['date'],reports['total'])
+            print "Trigger: byservice: {0}  byhost: {1}  byemail: {2}".format(reports['byservice'],reports['byhost'],reports['byemail'])
+            print "Resolve: bynagios: {0}  bytimeout: {1}  byhuman: {2}\n".format(reports['rbynagios'],reports['rbytimeout'],reports['rbyhuman'])
     elif opts['date']:
         if re.match(daterex,opts['date']):
             date = datetime.datetime.strptime(opts['date'],"%Y-%m-%d")
             reports = get_reports(date,-1,opts)
-            print "date: {0}".format(reports['date'])
-            print "  total: {0}  byservice: {1}  byhost: {2}  byemail: {3}".format(reports['total'],reports['byservice'],reports['byhost'],reports['byemail'])
+            print "DATE: {0}  TOTAL: {1}".format(reports['date'],reports['total'])
+            print "Trigger: byservice: {0}  byhost: {1}  byemail: {2}".format(reports['byservice'],reports['byhost'],reports['byemail'])
+            print "Resolve: bynagios: {0}  bytimeout: {1}  byhuman: {2}".format(reports['rbynagios'],reports['rbytimeout'],reports['rbyhuman'])
             print "{0}".format(reports['details'])
         else:
             print "The date is incorrect"
