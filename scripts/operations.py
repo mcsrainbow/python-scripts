@@ -6,7 +6,7 @@ Reference: fabric/operations.py.
 
 Examples:
     >>> from operations import local,remote,get,put
-local:
+
     >>> out = local('uname -r')
     >>> print out
     2.6.32
@@ -16,7 +16,7 @@ local:
     False
     >>> print out.succeeded
     True
-remote:
+
     >>> out = remote('hostname --fqdn',hostname='heylinux.com',username='jobs',
                      pkey='/path/to/rsa',port=8022)
     >>> print out
@@ -25,7 +25,7 @@ remote:
     False
     >>> print out.succeeded
     True
-get:
+
     >>> out = get('/tmp/remote.txt','/tmp/local.txt',hostname='heylinux.com',username='jobs',
                   pkey='/path/to/dsa',pkey_type='dsa',port=8022)
     >>> print out.failed
@@ -34,7 +34,7 @@ get:
     False 
     >>> print out.stderr
     No such file or directory
-put:
+
     >>> out = put('/tmp/local.txt','/tmp/remote.txt',hostname='heylinux.com',username='jobs',
                   password='apple')
     >>> print out.failed
