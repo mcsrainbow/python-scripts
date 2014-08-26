@@ -17,7 +17,8 @@ local:
     >>> print out.succeeded
     True
 remote:
-    >>> out = remote('hostname --fqdn',hostname='heylinux.com',username='jobs',pkey='/path/to/rsa',port=8022)
+    >>> out = remote('hostname --fqdn',hostname='heylinux.com',username='jobs',
+                     pkey='/path/to/rsa',port=8022)
     >>> print out
     heylinux.com
     >>> print out.failed
@@ -25,7 +26,8 @@ remote:
     >>> print out.succeeded
     True
 get:
-    >>> out = get('/tmp/remote.txt','/tmp/local.txt',hostname='heylinux.com',username='jobs',pkey='/path/to/dsa',pkey_type='dsa',port=8022)
+    >>> out = get('/tmp/remote.txt','/tmp/local.txt',hostname='heylinux.com',username='jobs',
+                  pkey='/path/to/dsa',pkey_type='dsa',port=8022)
     >>> print out.failed
     True 
     >>> print out.succeeded
@@ -33,7 +35,8 @@ get:
     >>> print out.stderr
     No such file or directory
 put:
-    >>> out = put('/tmp/local.txt','/tmp/remote.txt',hostname='heylinux.com',username='jobs',password='apple')
+    >>> out = put('/tmp/local.txt','/tmp/remote.txt',hostname='heylinux.com',username='jobs',
+                  password='apple')
     >>> print out.failed
     False
     >>> print out.succeeded
@@ -106,7 +109,8 @@ def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", p
     p.close()
     return out
 
-def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22, transfer_type=None):
+def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey_type="rsa", 
+         port=22, transfer_type=None):
     p = paramiko.Transport((hostname,port))
 
     if pkey is not None:
@@ -140,7 +144,9 @@ def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey
     return out
 
 def get(remote_path, local_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
-    return sftp(remote_path, local_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, port=port, transfer_type="get")
+    return sftp(remote_path, local_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, 
+                port=port, transfer_type="get")
 
 def put(local_path, remote_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
-    return sftp(local_path, remote_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, port=port, transfer_type="put")
+    return sftp(local_path, remote_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, 
+                port=port, transfer_type="put")
