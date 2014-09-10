@@ -9,7 +9,6 @@
 # sudo mv xmlrpc.php xmlrpc.php.bak
 
 from xmlrpclib import ServerProxy
-from urllib import urlopen
 from random import randint
 from threading import Thread
 
