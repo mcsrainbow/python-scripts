@@ -33,6 +33,8 @@ def parse_opts():
           {0} idc1-server1 -w
           {0} idc1-server1 -w -s IDC1:P1:C1:1
           {0} idc2-server2 -w -s IDC2:P2:C2:1,2
+          {0} idc2-server3 -w -s IDC2:P2:C2:3 -p left
+          {0} idc2-server4 -w -s IDC2:P2:C2:3 -p right
         '''.format(__file__)
         ))
     exclusion = parser.add_mutually_exclusive_group()
@@ -41,9 +43,10 @@ def parse_opts():
     exclusion.add_argument('-d', action="store_true", default=False,help='delete from database')
     exclusion.add_argument('-w', action="store_true", default=False,help='write to database')
     parser.add_argument('-s', metavar='rackspace', type=str, help='rackspace informations')
+    parser.add_argument('-p', metavar='rackposition', type=str, choices=['left','right','front','interior','back'], help='rackspace detailed position')
 
     args = parser.parse_args()
-    return {'hostname':args.hostname, 'read':args.r, 'delete':args.d, 'write':args.w, 'rackspace':args.s}
+    return {'hostname':args.hostname, 'read':args.r, 'delete':args.d, 'write':args.w, 'rackspace':args.s, 'rackposition':args.p }
 
 def isup(host):
     """Check if host is up"""
@@ -427,7 +430,15 @@ def update_db(info):
             atom_list = atom.split(',')
             atom_data  = []
             for i in atom_list:
-               atom_data.append("&atom_{0}_{1}_0=on&atom_{0}_{1}_1=on&atom_{0}_{1}_2=on".format(rack_id,i))
+               if opts['rackposition']:
+                   if opts['rackposition'] in ['left', 'front']:
+                       atom_data.append("&atom_{0}_{1}_0=on".format(rack_id,i))
+                   if opts['rackposition'] in ['right', 'back']:
+                       atom_data.append("&atom_{0}_{1}_2=on".format(rack_id,i))
+                   if opts['rackposition'] in ['interior']:
+                       atom_data.append("&atom_{0}_{1}_1=on".format(rack_id,i))
+               else:
+                   atom_data.append("&atom_{0}_{1}_0=on&atom_{0}_{1}_1=on&atom_{0}_{1}_2=on".format(rack_id,i))
             atom_url = "".join(atom_data) 
     
             url = """'http://{0}/racktables/index.php?module=redirect&page=object&tab=rackspace&op=updateObjectAllocation' \
