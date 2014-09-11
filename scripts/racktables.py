@@ -2,12 +2,17 @@
 #-*- coding:utf-8 -*-
 
 # Author: Dong Guo
-# Last Modified: 2014/07/22
+# Last Modified: 2014/09/11
 
 import os
 import sys
 import commands
 from decimal import Decimal
+
+# import time to use spleep function
+from time import sleep
+# import urllib to encode the data for POST
+from urllib import quote_plus
 
 # import fabric api to run commands remotely
 try:
@@ -15,6 +20,17 @@ try:
 except ImportError:
     sys.stderr.write("ERROR: Requires Fabric, try 'pip install fabric'.\n")
     sys.exit(1)
+
+# torndb is a lightweight wrapper around MySQLdb
+try:
+    from torndb import Connection
+except ImportError:
+    sys.stderr.write("ERROR: Requires torndb, try 'yum install MySQL-python' then 'pip install torndb'.\n")
+    sys.exit(1)
+
+# racktables server address, username, password with curl command
+rt_server = "server_address"
+curl = "curl -s -u username:password"
 
 def parse_opts():
     """Help messages (-h, --help) for racktables.py"""
@@ -31,10 +47,11 @@ def parse_opts():
           {0} idc1-server1 -r
           {0} idc1-server1 -d
           {0} idc1-server1 -w
-          {0} idc1-server1 -w -s IDC1:P1:C1:1
-          {0} idc2-server2 -w -s IDC2:P2:C2:1,2
-          {0} idc2-server3 -w -s IDC2:P2:C2:3 -p left
-          {0} idc2-server4 -w -s IDC2:P2:C2:3 -p right
+          {0} idc1-server1 -w -s IDC1:P1:C2:1
+          {0} idc2-server1 -w -s IDC2:P1:C3:1,2
+          {0} idc2-server2 -w -s IDC2:P1:C7:3 -p left
+          {0} idc2-server3 -w -s IDC2:P1:C7:3 -p right
+          {0} BlankIDC2P1C8U5 -b -w -s IDC2:P1:C8:5
         '''.format(__file__)
         ))
     exclusion = parser.add_mutually_exclusive_group()
@@ -42,11 +59,12 @@ def parse_opts():
     exclusion.add_argument('-r', action="store_true", default=False,help='read from database')
     exclusion.add_argument('-d', action="store_true", default=False,help='delete from database')
     exclusion.add_argument('-w', action="store_true", default=False,help='write to database')
+    parser.add_argument('-b', action="store_true", default=False,help='set Type as PatchPanel')
     parser.add_argument('-s', metavar='rackspace', type=str, help='rackspace informations')
     parser.add_argument('-p', metavar='rackposition', type=str, choices=['left','right','front','interior','back'], help='rackspace detailed position')
 
     args = parser.parse_args()
-    return {'hostname':args.hostname, 'read':args.r, 'delete':args.d, 'write':args.w, 'rackspace':args.s, 'rackposition':args.p }
+    return {'hostname':args.hostname, 'read':args.r, 'delete':args.d, 'blank':args.b, 'write':args.w, 'rackspace':args.s, 'rackposition':args.p }
 
 def isup(host):
     """Check if host is up"""
@@ -162,9 +180,9 @@ class FabricSupport(object):
         return rst_name
 
     def get_rst_name(self):
-        colo_prefix = run("""hostname -s |egrep 'idc1-|idc2-' |cut -d- -f1""")
+        colo_prefix = run("""hostname -s |egrep 'sc2-|iad2-' |cut -d- -f1""")
         if colo_prefix.succeeded:
-            xs = colo_prefix + '-xenhost1'
+            xs = colo_prefix + '-vm1001'
             rst_name = fab_execute(xs,'get_rst_on')
         return rst_name
 
@@ -236,19 +254,9 @@ def sum_info():
 
 def read_db(info):
     """Get info from Racktables DB"""
-    
-    # torndb is a lightweight wrapper around MySQLdb
-    try:
-        from torndb import Connection
-    except ImportError:
-        sys.stderr.write("ERROR: Requires torndb, try 'yum install MySQL-python' then 'pip install torndb'.\n")
-        sys.exit(1)
-
-    # racktables server address, username, password with curl command
-    rt_server = "racktables-website"
 
     # connect to racktables db
-    db = Connection(rt_server,"dbname","username","password")
+    db = Connection(rt_server,"racktables_db","racktables_user","racktables")
 
     # check if object_id already exists
     object_id = ""
@@ -283,33 +291,13 @@ def read_db(info):
 
 def update_db(info):
     """Automate server audit into Racktables"""
-    
-    # import time to use spleep function 
-    from time import sleep 
-    # import urllib to encode the data for POST
-    from urllib import quote_plus
-    # torndb is a lightweight wrapper around MySQLdb
-    try:
-        from torndb import Connection
-    except ImportError:
-        sys.stderr.write("ERROR: Requires torndb, try 'yum install MySQL-python' then 'pip install torndb'.\n")
-        sys.exit(1)
-    
-    # racktables server address, username, password with curl command
-    rt_server = "racktables-website"
-    curl = "curl -s -u username:password"
 
     # connect to racktables db
-    db = Connection(rt_server,"dbname","username","password")
+    db = Connection(rt_server,"racktables_db","racktables_user","racktables")
 
     # get object_type_id
     for item in db.query("select * from Dictionary where dict_value='{0}'".format(info['server_type'])):
         object_type_id = item.dict_key
-
-    # check if object_id already exists, then create object if not
-    object_id = ""
-    for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
-        object_id = item.id
 
     # delete object if already exists
     delete_object(info)   
@@ -409,47 +397,100 @@ def update_db(info):
 
     # virtual servers don't need to update the rackspace
     if info['server_type'] not in ["EC2","VM"]:
-        # update the rackspace
-        if opts['rackspace']:
-            rs_info = opts['rackspace'].split(':')
-            colo = "".join(rs_info[0:1])
-            row  = "".join(rs_info[1:2])
-            rack = "".join(rs_info[2:3])
-            atom = "".join(rs_info[3:4])
-            if not atom:
-                print "The rackspace is not correct"
-                return False 
-    
-            # get rack_id
-            for item in db.query("select * from Rack where name = '{0}' and location_name = '{1}' and row_name = '{2}'".format(rack,colo,row)):
-                rack_id = item.id
-            if not rack_id:
-                print "Faild to get rack_id"
-                return False
-            
-            atom_list = atom.split(',')
-            atom_data  = []
-            for i in atom_list:
-               if opts['rackposition']:
-                   if opts['rackposition'] in ['left', 'front']:
-                       atom_data.append("&atom_{0}_{1}_0=on".format(rack_id,i))
-                   if opts['rackposition'] in ['right', 'back']:
-                       atom_data.append("&atom_{0}_{1}_2=on".format(rack_id,i))
-                   if opts['rackposition'] in ['interior']:
-                       atom_data.append("&atom_{0}_{1}_1=on".format(rack_id,i))
-               else:
-                   atom_data.append("&atom_{0}_{1}_0=on&atom_{0}_{1}_1=on&atom_{0}_{1}_2=on".format(rack_id,i))
-            atom_url = "".join(atom_data) 
-    
-            url = """'http://{0}/racktables/index.php?module=redirect&page=object&tab=rackspace&op=updateObjectAllocation' \
+        # update rack info
+        update_rack(info,object_id)
+
+    # close db
+    db.close()
+
+    # end
+    return True
+
+def update_blank(info):
+    """Automate server autodir for PatchPanel into Racktables"""
+
+    # connect to racktables db
+    db = Connection(rt_server,"racktables_db","racktables_user","racktables")
+
+    # delete object if already exists
+    delete_object(info)
+
+    # create object
+    url = """'http://{0}/racktables/index.php?module=redirect&page=depot&tab=addmore&op=addObjects' \
+--data '0_object_type_id=9&0_object_name={1}&0_object_label=&0_object_asset_no={1}&got_fast_data=Go%21'"""\
+               .format(rt_server,info['hostname'])
+
+    cmd = "{0} {1}".format(curl,url)
+    status, output = commands.getstatusoutput(cmd)
+    if status != 0:
+        print "Failed to created object: {0}".format(info['hostname'])
+        return False
+    else:
+        print "OK - Created object: {0}".format(info['hostname'])
+
+    # get object_id
+    for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
+        object_id = item.id
+    if not object_id:
+        print "Faild to get object_id"
+        return False
+
+    # update rack info
+    update_rack(info,object_id)
+
+    # close db
+    db.close()
+
+    # end
+    return True
+
+def update_rack(info,object_id):
+    """Automate server audit for rack info into Racktables"""
+
+    # connect to racktables db
+    db = Connection(rt_server,"racktables_db","racktables_user","racktables")
+
+    # update the rackspace
+    if opts['rackspace']:
+        rs_info = opts['rackspace'].split(':')
+        colo = "".join(rs_info[0:1])
+        row  = "".join(rs_info[1:2])
+        rack = "".join(rs_info[2:3])
+        atom = "".join(rs_info[3:4])
+        if not atom:
+            print "The rackspace is not correct"
+            return False 
+
+        # get rack_id
+        for item in db.query("select * from Rack where name = '{0}' and location_name = '{1}' and row_name = '{2}'".format(rack,colo,row)):
+            rack_id = item.id
+        if not rack_id:
+            print "Faild to get rack_id"
+            return False
+        
+        atom_list = atom.split(',')
+        atom_data  = []
+        for i in atom_list:
+           if opts['rackposition']:
+               if opts['rackposition'] in ['left', 'front']:
+                   atom_data.append("&atom_{0}_{1}_0=on".format(rack_id,i))
+               if opts['rackposition'] in ['right', 'back']:
+                   atom_data.append("&atom_{0}_{1}_2=on".format(rack_id,i))
+               if opts['rackposition'] in ['interior']:
+                   atom_data.append("&atom_{0}_{1}_1=on".format(rack_id,i))
+           else:
+               atom_data.append("&atom_{0}_{1}_0=on&atom_{0}_{1}_1=on&atom_{0}_{1}_2=on".format(rack_id,i))
+        atom_url = "".join(atom_data) 
+
+        url = """'http://{0}/racktables/index.php?module=redirect&page=object&tab=rackspace&op=updateObjectAllocation' \
 --data 'object_id={1}&rackmulti%5B%5D={2}&comment=&got_atoms=Save{3}'"""\
-                .format(rt_server,object_id,rack_id,atom_url)
-            cmd = "{0} {1}".format(curl,url)
-            status, output = commands.getstatusoutput(cmd)
-            if status != 0:
-                print "Failed to update rackspace"
-                return False
-            print "OK - Updated rackspace"
+            .format(rt_server,object_id,rack_id,atom_url)
+        cmd = "{0} {1}".format(curl,url)
+        status, output = commands.getstatusoutput(cmd)
+        if status != 0:
+            print "Failed to update rackspace"
+            return False
+        print "OK - Updated rackspace"
            
     # close db
     db.close()
@@ -460,19 +501,8 @@ def update_db(info):
 def delete_object(info):
     """Delete object from DB"""
 
-    # torndb is a lightweight wrapper around MySQLdb
-    try:
-        from torndb import Connection
-    except ImportError:
-        sys.stderr.write("ERROR: Requires torndb, try 'yum install MySQL-python' then 'pip install torndb'.\n")
-        sys.exit(1)
-    
-    # racktables server address, username, password with curl command
-    rt_server = "racktables-website"
-    curl = "curl -s -u username:password"
-
     # connect to racktables db
-    db = Connection(rt_server,"dbname","username","password")
+    db = Connection(rt_server,"racktables_db","racktables_user","racktables")
 
     # check if object_id already exists, then create object if not
     object_id = ""
@@ -501,24 +531,28 @@ if __name__=='__main__':
         sys.exit(1)
     opts = parse_opts()
     
-    # check if host is up
-    hostup = isup(opts['hostname'])
+    if not opts['blank']:
+        # check if host is up
+        hostup = isup(opts['hostname'])
+        
+        if hostup: 
+            # get info
+            print "========================================"
+            print "Getting informations from '{0}'...".format(opts['hostname'])
+            print "========================================"
+            info = sum_info()
     
-    if hostup: 
-        # get info
-        print "========================================"
-        print "Getting informations from '{0}'...".format(opts['hostname'])
-        print "========================================"
-        info = sum_info()
-
-        # update racktables
-        if opts['write']:
-            print "========================================"
-            print "Updating racktables..." 
-            print "========================================"
-            update_db(info)
+            # update racktables
+            if opts['write']:
+                print "========================================"
+                print "Updating racktables..." 
+                print "========================================"
+                update_db(info)
+        else:
+            info = {'hostname':opts['hostname']}
     else:
         info = {'hostname':opts['hostname']}
+        update_blank(info) 
 
     # read racktables
     if opts['read']:
