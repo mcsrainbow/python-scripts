@@ -2,7 +2,7 @@
 #-*- coding:utf-8 -*-
 
 # Author: Dong Guo
-# Last Modified: 2014/09/11
+# Last Modified: 2014/09/12
 
 import os
 import sys
@@ -29,8 +29,8 @@ except ImportError:
     sys.exit(1)
 
 # racktables server address, username, password with curl command
-rt_server = "server_address"
-curl = "curl -s -u username:password"
+rt_server = "sc2-rackmonkey"
+curl = "curl -s -u admin:racktables"
 
 def parse_opts():
     """Help messages (-h, --help) for racktables.py"""
@@ -47,11 +47,12 @@ def parse_opts():
           {0} idc1-server1 -r
           {0} idc1-server1 -d
           {0} idc1-server1 -w
-          {0} idc1-server1 -w -s IDC1:P1:C2:1
-          {0} idc2-server1 -w -s IDC2:P1:C3:1,2
-          {0} idc2-server2 -w -s IDC2:P1:C7:3 -p left
-          {0} idc2-server3 -w -s IDC2:P1:C7:3 -p right
-          {0} BlankIDC2P1C8U5 -b -w -s IDC2:P1:C8:5
+          {0} idc1-server1 -w -s IDC1:P1:C1:1
+          {0} idc2-server1 -w -s IDC2:P2:C1:1,2
+          {0} idc2-server2 -w -s IDC2:P1:C2:34 -p left
+          {0} idc2-server3 -w -s IDC2:P1:C2:34 -p right
+          {0} BlankIDC2P1C2U9 -b -w -s IDC2:P1:C2:9
+          {0} IDC2:P1:C2 -l
         '''.format(__file__)
         ))
     exclusion = parser.add_mutually_exclusive_group()
@@ -59,12 +60,13 @@ def parse_opts():
     exclusion.add_argument('-r', action="store_true", default=False,help='read from database')
     exclusion.add_argument('-d', action="store_true", default=False,help='delete from database')
     exclusion.add_argument('-w', action="store_true", default=False,help='write to database')
+    exclusion.add_argument('-l', action="store_true", default=False,help='list hosts and devices of the rackspace')
     parser.add_argument('-b', action="store_true", default=False,help='set Type as PatchPanel')
     parser.add_argument('-s', metavar='rackspace', type=str, help='rackspace informations')
     parser.add_argument('-p', metavar='rackposition', type=str, choices=['left','right','front','interior','back'], help='rackspace detailed position')
 
     args = parser.parse_args()
-    return {'hostname':args.hostname, 'read':args.r, 'delete':args.d, 'blank':args.b, 'write':args.w, 'rackspace':args.s, 'rackposition':args.p }
+    return {'hostname':args.hostname, 'read':args.r, 'delete':args.d, 'blank':args.b, 'write':args.w, 'rackspace':args.s, 'rackposition':args.p, 'list':args.l }
 
 def isup(host):
     """Check if host is up"""
@@ -85,7 +87,7 @@ def fab_execute(host,task):
     """Execute the task in class FabricSupport."""
 
     user = "username"
-    keyfile = "/home/username/.ssh/id_rsa"
+    keyfile = "/home/username/.ssh/id_dsa"
     
     # execute the given task
     myfab = FabricSupport()
@@ -520,6 +522,53 @@ def delete_object(info):
             return False
         else:
             print "OK - Deleted the existing object: {0}".format(info['hostname'])
+
+    # close db
+    db.close()
+    
+    return True
+
+def list_object(info):
+    """List the objects of the given rackspace"""
+
+    # connect to racktables db
+    db = Connection(rt_server,"racktables_db","racktables_user","racktables")
+
+    # check if rackspace is correct
+    rs_info = opts['hostname'].split(':')
+    colo = "".join(rs_info[0:1])
+    row  = "".join(rs_info[1:2])
+    rack = "".join(rs_info[2:3])
+    if not rack:
+        print "The rackspace is not correct"
+        return False
+
+    # get rack_id
+    for item in db.query("select * from Rack where name = '{0}' and location_name = '{1}' and row_name = '{2}'".format(rack,colo,row)):
+        rack_id = item.id
+    if not rack_id:
+        print "Faild to get rack_id"
+        return False
+
+    # get object_id
+    object_id_list = []
+    for item in db.query("select * from RackSpace where rack_id={0}".format(rack_id)):
+        object_id_list.append(item.object_id)
+    if len(object_id_list) == 0:
+        print "Faild to get object_id"
+        return False
+
+    # get rid of the duplicated items then sort and read one by one
+    for object_id in sorted(list(set(object_id_list))):
+        for item in db.query("select * from Object where id={0}".format(object_id)):
+            object_name = item.name
+            object_type_id = item.objtype_id
+            for item in db.query("select * from Dictionary where dict_key={0}".format(object_type_id)):
+                object_type_name = item.dict_value
+        print "{0}: {1}".format(object_type_name,object_name)
+
+    # close db
+    db.close()
     
     return True
 
@@ -531,7 +580,7 @@ if __name__=='__main__':
         sys.exit(1)
     opts = parse_opts()
     
-    if not opts['blank']:
+    if not opts['blank'] and not opts['list']:
         # check if host is up
         hostup = isup(opts['hostname'])
         
@@ -551,9 +600,20 @@ if __name__=='__main__':
         else:
             info = {'hostname':opts['hostname']}
     else:
-        info = {'hostname':opts['hostname']}
-        update_blank(info) 
-
+        if opts['blank']:
+            info = {'hostname':opts['hostname']}
+            if opts['write']:
+                print "========================================"
+                print "Updating racktables..." 
+                print "========================================"
+                update_blank(info) 
+        if opts['list']:
+            info = {'hostname':opts['hostname']}
+            print "========================================"
+            print "Getting objects in rackspace:'{0}'...".format(opts['hostname'])
+            print "========================================"
+            list_object(info)
+    
     # read racktables
     if opts['read']:
         print "========================================"
