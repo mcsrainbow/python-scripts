@@ -52,6 +52,7 @@ def parse_opts():
           {0} idc2-server2 -w -s IDC2:P1:C2:34 -p left
           {0} idc2-server3 -w -s IDC2:P1:C2:34 -p right
           {0} BlankIDC2P1C2U9 -b -w -s IDC2:P1:C2:9
+          {0} BlankIDC2P1C2U9 -b -d
           {0} IDC2:P1:C2 -l
         '''.format(__file__)
         ))
