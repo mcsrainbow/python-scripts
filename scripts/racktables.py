@@ -326,7 +326,7 @@ def update_db(info):
     for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
         object_id = item.id
     if not object_id:
-        print "Faild to get object_id"
+        print "Failed to get object_id"
         return False
 
     # get os_release_id
@@ -334,7 +334,7 @@ def update_db(info):
     for item in db.query("select * from Dictionary where dict_value='{0}'".format(info['os_release'])):
         os_release_key = item.dict_key
     if not os_release_key:
-        print "Faild to get object_type_id, please add '{0}' to 'Configuration - Dictionary - Server OS type'.".format(info['os_release'])
+        print "Failed to get object_type_id, please add '{0}' to 'Configuration - Dictionary - Server OS type'.".format(info['os_release'])
         return False
 
     # update the informations of object, all post data formats were got by firebug on firefox
@@ -434,7 +434,7 @@ def update_blank(info):
     for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
         object_id = item.id
     if not object_id:
-        print "Faild to get object_id"
+        print "Failed to get object_id"
         return False
 
     # update rack info
@@ -467,7 +467,7 @@ def update_rack(info,object_id):
         for item in db.query("select * from Rack where name = '{0}' and location_name = '{1}' and row_name = '{2}'".format(rack,colo,row)):
             rack_id = item.id
         if not rack_id:
-            print "Faild to get rack_id"
+            print "Failed to get rack_id"
             return False
         
         atom_list = atom.split(',')
@@ -547,7 +547,7 @@ def list_object(info):
     for item in db.query("select * from Rack where name = '{0}' and location_name = '{1}' and row_name = '{2}'".format(rack,colo,row)):
         rack_id = item.id
     if not rack_id:
-        print "Faild to get rack_id"
+        print "Failed to get rack_id"
         return False
 
     # get object_id
@@ -555,7 +555,7 @@ def list_object(info):
     for item in db.query("select * from RackSpace where rack_id={0}".format(rack_id)):
         object_id_list.append(item.object_id)
     if len(object_id_list) == 0:
-        print "Faild to get object_id"
+        print "Failed to get object_id"
         return False
 
     # get rid of the duplicated items then sort and read one by one
