@@ -231,11 +231,13 @@ if __name__=='__main__':
         os.system(__file__ + " -h")
         sys.exit(1)
     opts = parse_opts()
+
     if opts['create']:
         create_instance(opts['region'],opts['instance_name'],opts['image_id'],opts['instance_type'],
                         opts['key_name'],opts['security_group_ids'].split(),opts['subnet_id'],opts['private_ip_address'],
                         opts['volume_size'],opts['volume_type'],opts['volume_zone'],opts['volume_iops'],
                         opts['volume_delete_on_termination'],opts['load_balancer_name'])
+
     if opts['clone']:
         clone_instance(opts['region'],opts['src_instance_name'],opts['dest_instance_name'],opts['private_ip_address'])
             
