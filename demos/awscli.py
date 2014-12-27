@@ -193,7 +193,7 @@ def clone_instance(region,src_instance_name,dest_instance_name,private_ip_addres
 
     return True
 
-def terminate_instance(region,instance_name,instance_id):
+def terminate_instance(region,instance_name,instance_id,quick):
     conn = boto.ec2.connect_to_region(region,
                 aws_access_key_id=AWS_ACCESS_KEY_ID,
                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -206,7 +206,7 @@ def terminate_instance(region,instance_name,instance_id):
             instance_id_list = instance.id.split()
             print "Terminating instance: {0} id: {1}".format(instance_name, instance.id)
             conn.terminate_instances(instance_ids=instance_id_list)
-            if not opts['quick']:
+            if not quick:
                 while instance.state != u'terminated':
                     time.sleep(20)
                     instance.update()
@@ -219,7 +219,7 @@ def terminate_instance(region,instance_name,instance_id):
         reservations = conn.get_all_reservations(instance_id)
         reservation = reservations[0]
         instance = reservation.instances[0]
-        if not opts['quick']:
+        if not quick:
             while instance.state != u'terminated':
                 time.sleep(20)
                 instance.update()
@@ -244,4 +244,4 @@ if __name__=='__main__':
         clone_instance(opts['region'],opts['src_instance_name'],opts['dest_instance_name'],opts['private_ip_address'])
             
     if opts['terminate']:
-        terminate_instance(opts['region'],opts['instance_name'],opts['instance_id'])
+        terminate_instance(opts['region'],opts['instance_name'],opts['instance_id'],opts['quick'])
