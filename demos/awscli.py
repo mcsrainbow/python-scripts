@@ -41,7 +41,8 @@ def parse_opts():
                        --volume_size 10 --volume_type gp2 --volume_zone us-west-1a --volume_delete_on_termination \\
                        --load_balancer_name idc1-elb1 --private_ip_address 172.16.2.23
           {0} --clone --region us-west-1 --src_instance_name idc1-server1 --dest_instance_name idc1-server2
-          {0} --clone --region us-west-1 --src_instance_name idc1-server1 --dest_instance_name idc1-server3 --private_ip_address 172.16.2.23
+          {0} --clone --region us-west-1 --src_instance_name idc1-server1 --dest_instance_name idc1-server3 \\
+                      --private_ip_address 172.16.2.23
           {0} --terminate --region us-west-1 --instance_name idc1-server3
           {0} --terminate --region us-west-1 --instance_id i-01234abc
           {0} --terminate --region us-west-1 --instance_id i-01234abc --quick
@@ -79,11 +80,13 @@ def parse_opts():
             'key_name':args.key_name, 'security_group_ids':args.security_group_ids, 'subnet_id':args.subnet_id,
             'src_instance_name':args.src_instance_name, 'dest_instance_name':args.dest_instance_name,
             'private_ip_address':args.private_ip_address, 'instance_id':args.instance_id,
-            'volume_size':args.volume_size, 'volume_type':args.volume_type, 'volume_zone':args.volume_zone, 'volume_iops':args.volume_iops,
-            'volume_delete_on_termination':args.volume_delete_on_termination, 'load_balancer_name':args.load_balancer_name, 'quick':args.quick}
+            'volume_size':args.volume_size, 'volume_type':args.volume_type, 'volume_zone':args.volume_zone,
+            'volume_iops':args.volume_iops, 'volume_delete_on_termination':args.volume_delete_on_termination, 
+            'load_balancer_name':args.load_balancer_name, 'quick':args.quick}
 
 def create_instance(region,instance_name,image_id,instance_type,key_name,security_group_ids,subnet_id,
-                    private_ip_address,volume_size,volume_type,volume_zone,volume_iops,volume_delete_on_termination,load_balancer_name):
+                    private_ip_address,volume_size,volume_type,volume_zone,
+                    volume_iops,volume_delete_on_termination,load_balancer_name):
     conn = boto.ec2.connect_to_region(region,
                 aws_access_key_id=AWS_ACCESS_KEY_ID,
                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -189,7 +192,8 @@ def clone_instance(region,src_instance_name,dest_instance_name,private_ip_addres
                 load_balancer_name = elb.name
 
     create_instance(region,instance_name,image_id,instance_type,key_name,security_group_ids,subnet_id,
-                    private_ip_address,volume_size,volume_type,volume_zone,volume_iops,volume_delete_on_termination,load_balancer_name)
+                    private_ip_address,volume_size,volume_type,volume_zone,volume_iops,
+                    volume_delete_on_termination,load_balancer_name)
 
     return True
 
