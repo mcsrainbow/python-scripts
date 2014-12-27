@@ -76,9 +76,9 @@ def parse_opts():
 
     args = parser.parse_args()
     return {'create':args.create, 'clone':args.clone, 'terminate':args.terminate, 
-            'region':args.region, 'instance_name':args.instance_name, 'image_id':args.image_id, 'instance_type':args.instance_type, 
-            'key_name':args.key_name, 'security_group_ids':args.security_group_ids, 'subnet_id':args.subnet_id,
-            'src_instance_name':args.src_instance_name, 'dest_instance_name':args.dest_instance_name,
+            'region':args.region, 'instance_name':args.instance_name, 'image_id':args.image_id,
+            'instance_type':args.instance_type, 'key_name':args.key_name, 'security_group_ids':args.security_group_ids,
+            'subnet_id':args.subnet_id, 'src_instance_name':args.src_instance_name, 'dest_instance_name':args.dest_instance_name,
             'private_ip_address':args.private_ip_address, 'instance_id':args.instance_id,
             'volume_size':args.volume_size, 'volume_type':args.volume_type, 'volume_zone':args.volume_zone,
             'volume_iops':args.volume_iops, 'volume_delete_on_termination':args.volume_delete_on_termination, 
