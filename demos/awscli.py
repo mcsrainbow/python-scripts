@@ -165,6 +165,10 @@ def clone_instance(region,src_instance_name,dest_instance_name,private_ip_addres
     volume_delete_on_termination = src_instance.block_device_mapping[SECONDARY_VOLUME_DEVICE].delete_on_termination
 
     src_volumes = conn.get_all_volumes(filters={'attachment.instance-id': "{0}".format(src_instance.id)})
+    volume_size = None
+    volume_type = None
+    volume_zone = None
+    volume_iops = None
     for src_volume in src_volumes:
         if src_volume.attach_data.device == SECONDARY_VOLUME_DEVICE:
             volume_size = src_volume.size
@@ -172,8 +176,6 @@ def clone_instance(region,src_instance_name,dest_instance_name,private_ip_addres
             volume_zone = src_volume.zone
             if volume_type == "io1":
                 volume_iops = src_volume.iops
-            else:
-                volume_iops = None
 
     elb_conn = boto.ec2.elb.connect_to_region(region,
                                               aws_access_key_id=AWS_ACCESS_KEY_ID,
