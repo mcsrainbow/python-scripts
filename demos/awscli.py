@@ -122,7 +122,7 @@ def create_instance(region,instance_name,image_id,instance_type,key_name,securit
         instance.modify_attribute('blockDeviceMapping', {root_device: True})
 
     # create volume
-    if volume_size and volume_type:
+    if volume_size and volume_type and volume_zone:
         print "3. Creating secondary volume for instance: {0} as {1} {2}G".format(instance_name,volume_type,volume_size)
         volume = conn.create_volume(volume_size,zone=volume_zone,volume_type=volume_type,iops=volume_iops)
         while volume.status == u'creating':
