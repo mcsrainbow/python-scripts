@@ -165,7 +165,9 @@ def clone_instance(region,src_instance_name,dest_instance_name,private_ip_addres
     security_group_ids = src_instance.groups[0].id.split()
     subnet_id = src_instance.subnet_id
     private_ip_address = private_ip_address
-    volume_delete_on_termination = src_instance.block_device_mapping[SECONDARY_VOLUME_DEVICE].delete_on_termination
+
+    root_device = src_instance.root_device_name
+    volume_delete_on_termination = src_instance.block_device_mapping[root_device].delete_on_termination
 
     src_volumes = conn.get_all_volumes(filters={'attachment.instance-id': "{0}".format(src_instance.id)})
     volume_size = None
