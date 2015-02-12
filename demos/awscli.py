@@ -80,6 +80,7 @@ def parse_opts():
     parser.add_argument('--volume_iops', type=int)
     parser.add_argument('--volume_delete_on_termination', action="store_true", default=False, help='delete volumes on termination')
     parser.add_argument('--load_balancer_name', type=str)
+    parser.add_argument('--ignore_load_balancer', action="store_true", default=False, help='ignore load balancer setting')
     parser.add_argument('--quick', action="store_true", default=False, help='no wait on termination')
 
     args = parser.parse_args()
@@ -89,7 +90,8 @@ def parse_opts():
             'src_instance_name':args.src_instance_name, 'dest_instance_name':args.dest_instance_name,
             'private_ip_address':args.private_ip_address, 'instance_id':args.instance_id,
             'volume_size':args.volume_size, 'volume_type':args.volume_type, 'volume_zone':args.volume_zone, 'volume_iops':args.volume_iops,
-            'volume_delete_on_termination':args.volume_delete_on_termination, 'load_balancer_name':args.load_balancer_name, 'quick':args.quick}
+            'volume_delete_on_termination':args.volume_delete_on_termination, 'load_balancer_name':args.load_balancer_name,
+            'ignore_load_balancer':args.ignore_load_balancer, 'quick':args.quick}
 
 def create_instance(region,instance_name,image_id,instance_type,key_name,security_group_ids,subnet_id,
                     private_ip_address,volume_size,volume_type,volume_zone,volume_iops,volume_delete_on_termination,load_balancer_name):
@@ -155,7 +157,7 @@ def create_instance(region,instance_name,image_id,instance_type,key_name,securit
 
     return True
 
-def clone_instance(region,src_instance_name,dest_instance_name,private_ip_address):
+def clone_instance(region,src_instance_name,dest_instance_name,private_ip_address,ignore_load_balancer):
     conn = boto.ec2.connect_to_region(region,
                 aws_access_key_id=AWS_ACCESS_KEY_ID,
                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -194,10 +196,11 @@ def clone_instance(region,src_instance_name,dest_instance_name,private_ip_addres
 
     elbs = elb_conn.get_all_load_balancers()
     load_balancer_name = None
-    for elb in elbs:
-        for elb_instance in elb.instances:
-            if src_instance.id == elb_instance.id:
-                load_balancer_name = elb.name
+    if not ignore_load_balancer:
+        for elb in elbs:
+            for elb_instance in elb.instances:
+                if src_instance.id == elb_instance.id:
+                    load_balancer_name = elb.name
 
     create_instance(region,instance_name,image_id,instance_type,key_name,security_group_ids,subnet_id,
                     private_ip_address,volume_size,volume_type,volume_zone,volume_iops,volume_delete_on_termination,load_balancer_name)
@@ -250,7 +253,7 @@ if __name__=='__main__':
                         opts['volume_size'],opts['volume_type'],opts['volume_zone'],opts['volume_iops'],
                         opts['volume_delete_on_termination'],opts['load_balancer_name'])
     if opts['clone']:
-        clone_instance(opts['region'],opts['src_instance_name'],opts['dest_instance_name'],opts['private_ip_address'])
+        clone_instance(opts['region'],opts['src_instance_name'],opts['dest_instance_name'],opts['private_ip_address'],opts['ignore_load_balancer'])
             
     if opts['terminate']:
         terminate_instance(opts['region'],opts['instance_name'],opts['instance_id'],opts['quick'])
