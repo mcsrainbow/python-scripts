@@ -33,19 +33,33 @@ def parse_opts():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
         '''
+        inventories:
+          eu-west-1:
+            subnets:
+              "private_172_17_8_11": "subnet-639a2a06"
+              "public_172_17_4_7": "subnet-6d9a2a08"
+            amis:
+              "official_centos65_x86_64_minimal_ebs50g": "ami-30f24f47"
+              "hvm_official_centos65_x86_64_minimal_ebs50g": "ami-34ee5343"
+            security_groups:
+              "default_sg": "sg-24b84053"
+              "default_sg_vpc": "sg-eaf4738f"
+              "sg_natgw": "sg-71f17d14"
+            key_pairs:
+              "drawbridge-ireland-keypair"
+
         examples:
-          {0} --create --region us-west-1 --instance_name idc1-server2 --image_id ami-30f01234 --instance_type t1.micro \\
-                       --key_name idc1-keypair1 --security_group_ids sg-eaf01234f --subnet_id subnet-6d901234
-          {0} --create --region us-west-1 --instance_name idc1-server3 --image_id ami-30f01234 --instance_type t1.micro \\
-                       --key_name idc1-keypair1 --security_group_ids sg-eaf01234f --subnet_id subnet-6d901234 \\
-                       --volume_size 10 --volume_type gp2 --volume_zone us-west-1a --volume_delete_on_termination \\
-                       --load_balancer_name idc1-elb1 --private_ip_address 172.16.2.23
-          {0} --clone --region us-west-1 --src_instance_name idc1-server1 --dest_instance_name idc1-server2
-          {0} --clone --region us-west-1 --src_instance_name idc1-server1 --dest_instance_name idc1-server3 \\
-                      --private_ip_address 172.16.2.23
-          {0} --terminate --region us-west-1 --instance_name idc1-server3
-          {0} --terminate --region us-west-1 --instance_id i-01234abc
-          {0} --terminate --region us-west-1 --instance_id i-01234abc --quick
+          {0} --create --region eu-west-1 --instance_name irl1-testmicro2 --image_id ami-30f24f47 --instance_type t1.micro \\
+                       --key_name drawbridge-ireland-keypair --security_group_ids sg-eaf4738f --subnet_id subnet-6d9a2a08
+          {0} --create --region eu-west-1 --instance_name irl1-testmicro3 --image_id ami-30f24f47 --instance_type t1.micro \\
+                       --key_name drawbridge-ireland-keypair --security_group_ids sg-eaf4738f --subnet_id subnet-6d9a2a08 \\
+                       --volume_size 10 --volume_type gp2 --volume_zone eu-west-1a --volume_delete_on_termination \\
+                       --load_balancer_name testlbmicro1 --private_ip_address 172.17.7.63
+          {0} --clone --region eu-west-1 --src_instance_name irl1-testmicro1 --dest_instance_name irl1-testmicro2
+          {0} --clone --region eu-west-1 --src_instance_name irl1-testmicro1 --dest_instance_name irl1-testmicro3 --private_ip_address 172.17.7.63
+          {0} --terminate --region eu-west-1 --instance_name irl1-testmicro3
+          {0} --terminate --region eu-west-1 --instance_id i-01718ae5
+          {0} --terminate --region eu-west-1 --instance_id i-01718ae5 --quick
           ...
         '''.format(__file__)
         ))
@@ -76,17 +90,15 @@ def parse_opts():
 
     args = parser.parse_args()
     return {'create':args.create, 'clone':args.clone, 'terminate':args.terminate, 
-            'region':args.region, 'instance_name':args.instance_name, 'image_id':args.image_id,
-            'instance_type':args.instance_type, 'key_name':args.key_name, 'security_group_ids':args.security_group_ids,
-            'subnet_id':args.subnet_id, 'src_instance_name':args.src_instance_name, 'dest_instance_name':args.dest_instance_name,
+            'region':args.region, 'instance_name':args.instance_name, 'image_id':args.image_id, 'instance_type':args.instance_type, 
+            'key_name':args.key_name, 'security_group_ids':args.security_group_ids, 'subnet_id':args.subnet_id,
+            'src_instance_name':args.src_instance_name, 'dest_instance_name':args.dest_instance_name,
             'private_ip_address':args.private_ip_address, 'instance_id':args.instance_id,
-            'volume_size':args.volume_size, 'volume_type':args.volume_type, 'volume_zone':args.volume_zone,
-            'volume_iops':args.volume_iops, 'volume_delete_on_termination':args.volume_delete_on_termination, 
-            'load_balancer_name':args.load_balancer_name, 'quick':args.quick}
+            'volume_size':args.volume_size, 'volume_type':args.volume_type, 'volume_zone':args.volume_zone, 'volume_iops':args.volume_iops,
+            'volume_delete_on_termination':args.volume_delete_on_termination, 'load_balancer_name':args.load_balancer_name, 'quick':args.quick}
 
 def create_instance(region,instance_name,image_id,instance_type,key_name,security_group_ids,subnet_id,
-                    private_ip_address,volume_size,volume_type,volume_zone,
-                    volume_iops,volume_delete_on_termination,load_balancer_name):
+                    private_ip_address,volume_size,volume_type,volume_zone,volume_iops,volume_delete_on_termination,load_balancer_name):
     conn = boto.ec2.connect_to_region(region,
                 aws_access_key_id=AWS_ACCESS_KEY_ID,
                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
@@ -194,8 +206,7 @@ def clone_instance(region,src_instance_name,dest_instance_name,private_ip_addres
                 load_balancer_name = elb.name
 
     create_instance(region,instance_name,image_id,instance_type,key_name,security_group_ids,subnet_id,
-                    private_ip_address,volume_size,volume_type,volume_zone,volume_iops,
-                    volume_delete_on_termination,load_balancer_name)
+                    private_ip_address,volume_size,volume_type,volume_zone,volume_iops,volume_delete_on_termination,load_balancer_name)
 
     return True
 
@@ -239,13 +250,11 @@ if __name__=='__main__':
         os.system(__file__ + " -h")
         sys.exit(1)
     opts = parse_opts()
-
     if opts['create']:
         create_instance(opts['region'],opts['instance_name'],opts['image_id'],opts['instance_type'],
                         opts['key_name'],opts['security_group_ids'].split(),opts['subnet_id'],opts['private_ip_address'],
                         opts['volume_size'],opts['volume_type'],opts['volume_zone'],opts['volume_iops'],
                         opts['volume_delete_on_termination'],opts['load_balancer_name'])
-
     if opts['clone']:
         clone_instance(opts['region'],opts['src_instance_name'],opts['dest_instance_name'],opts['private_ip_address'])
             
