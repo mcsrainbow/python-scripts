@@ -35,15 +35,15 @@ def parse_opts():
         '''
         examples:
           {0} --create --region us-west-1 --instance_name idc1-server2 \
-                      --image_id ami-30f01234 --instance_type t1.micro \
-                      --key_name idc1-keypair1 --security_group_ids sg-eaf01234f \
-                      --subnet_id subnet-6d901234
+                       --image_id ami-30f01234 --instance_type t1.micro \
+                       --key_name idc1-keypair1 --security_group_ids sg-eaf01234f \
+                       --subnet_id subnet-6d901234
           {0} --create --region us-west-1 --instance_name idc1-server3 \
-                      --image_id ami-30f01234 --instance_type t1.micro \
-                      --key_name idc1-keypair1 --security_group_ids sg-eaf01234f \
-                      --subnet_id subnet-6d901234 --volume_size 10 --volume_type gp2 \
-                      --volume_zone us-west-1a --volume_delete_on_termination \
-                      --load_balancer_name idc1-elb1 --private_ip_address 172.16.2.23
+                       --image_id ami-30f01234 --instance_type t1.micro \
+                       --key_name idc1-keypair1 --security_group_ids sg-eaf01234f \
+                       --subnet_id subnet-6d901234 --volume_size 10 --volume_type gp2 \
+                       --volume_zone us-west-1a --volume_delete_on_termination \
+                       --load_balancer_name idc1-elb1 --private_ip_address 172.16.2.23
           {0} --clone --region us-west-1 --src_instance_name idc1-server1 \
                       --dest_instance_name idc1-server2
           {0} --clone --region us-west-1 --src_instance_name idc1-server1 \
