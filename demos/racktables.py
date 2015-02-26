@@ -373,7 +373,7 @@ def update_db(info):
     else:
         print "OK - Created object: {0}".format(info['hostname'])
 
-    object_id = False 
+    object_id = ""
     # get object_id
     for item in db.query("select * from Object where name='{0}'".format(info['hostname'])):
         object_id = item.id
