@@ -468,10 +468,10 @@ def update_blank_offline(info):
     url = """http://{0}/racktables/index.php?module=redirect&page=depot&tab=addmore&op=addObjects""".format(rt_server)
     if opts['blank']:
         payload = """0_object_type_id=9&0_object_name={0}&0_object_label=&0_object_asset_no={0}&got_fast_data=Go%21"""\
-                     .format(info['hostname'])
+                  .format(info['hostname'])
     if opts['offline']:
         payload = """0_object_type_id=4&0_object_name={0}&0_object_label=&0_object_asset_no={0}&got_fast_data=Go%21"""\
-                     .format(info['hostname'])
+                  .format(info['hostname'])
 
     req = requests.post(url, data=payload, headers=rt_headers, auth=rt_auth)
     if req.status_code != requests.codes.ok:
@@ -563,7 +563,7 @@ def delete_object(info):
     # delete object if already exists
     if object_id:
         url = """http://{0}/racktables/index.php?module=redirect&op=deleteObject&page=depot&tab=addmore&object_id={1}"""\
-                  .format(rt_server,object_id)
+              .format(rt_server,object_id)
         req = requests.get(url,auth=rt_auth)
         if req.status_code != requests.codes.ok:
             print "Failed to delete the existing object: {0}".format(info['hostname'])
