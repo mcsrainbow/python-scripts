@@ -661,7 +661,6 @@ if __name__=='__main__':
             print "========================================"
             list_object(info)
 
-    
     # read racktables
     if opts['read'] or opts['delete']:
         print "========================================"
