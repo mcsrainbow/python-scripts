@@ -186,9 +186,7 @@ class GetServerInfo(object):
         return fqdn
     
     def get_os_release(self):
-        os_release = run('cat /etc/redhat-release')
-        if os_release.failed:
-            os_release = run('cat /etc/system-release')
+        os_release = run('cat /etc/*-release |head -n 1 |cut -d= -f2 |sed s/\"//g')
     
         os_mode = run('uname -m')
         return os_release + ", " + os_mode
