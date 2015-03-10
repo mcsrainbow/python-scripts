@@ -134,11 +134,14 @@ def print_reports(reports):
 
     return True
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
     argv_len = len(sys.argv)
     if argv_len < 2:
         os.system(__file__ + " -h")
-        return False
+        return 2
 
     opts = parse_opts()
     daterex = "^[0-9]{4}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30)))$"
@@ -158,7 +161,7 @@ def main():
             print_reports(reports)
         else:
             print "The date is incorrect"
-            return False
+            return 2
 
     elif opts['range']:
         daterex_raw = "[0-9]{4}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30)))"
@@ -171,9 +174,9 @@ def main():
             print_reports(reports)
         else:
             print "The date range is incorrect"
-            return False
+            return 2
 
-    return True
+    return 0
 
 if __name__=='__main__':
-    main()
+    sys.exit(main())
