@@ -134,10 +134,7 @@ def print_reports(reports):
 
     return True
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     argv_len = len(sys.argv)
     if argv_len < 2:
         os.system(__file__ + " -h")
