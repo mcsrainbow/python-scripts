@@ -120,7 +120,7 @@ def get_reports(date,days,opts):
             'config_nocache':config_nocache}
 
 def print_reports(reports):
-    '''Print Reports'''
+    '''Print reports.'''
 
     print "sum_data: {0} TB".format(reports['sum_data'])
     print "cache_tcp_hit_ratio: {0}%".format(reports['tcp_hit_ratio'])
