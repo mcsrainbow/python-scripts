@@ -5,15 +5,12 @@
 # Author: Dong Guo
 # Last modified: 2015-03-10 23:01
 
+import os
+import sys
+import re
 import requests
 import json
 import datetime
-import os
-import sys
-import time
-import re
-import calendar
-import requests
 
 api_url = "https://api.edgecast.com/v2/reporting/customers/YOUR-CUSTOMER-ID/"
 api_token = "YOUR-API-TOKEN"
