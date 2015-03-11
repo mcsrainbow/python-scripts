@@ -132,8 +132,7 @@ def print_reports(reports):
     return True
 
 def main():
-    argv_len = len(sys.argv)
-    if argv_len < 2:
+    if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         return 2
 
