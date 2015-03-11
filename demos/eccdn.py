@@ -54,12 +54,12 @@ class TokenAuth(requests.auth.AuthBase):
         return req
 
 def prettify(object):
-    '''Format JSON in human-readable form.'''
+    """Format JSON in human-readable form."""
 
     return json.dumps(object,indent=1)
 
 def get_bytestransferred(start_date,end_date):
-    '''Get summary data.'''
+    """Get summary data."""
 
     res_url = api_url + "bytestransferred"  
     req = requests.get(res_url,auth=TokenAuth(api_token),
@@ -67,7 +67,7 @@ def get_bytestransferred(start_date,end_date):
     return req.json()
 
 def get_cachestats(start_date,end_date):
-    '''Get cache stats.'''
+    """Get cache stats."""
 
     res_url = api_url + "media/8/cachestats"
     req = requests.get(res_url,auth=TokenAuth(api_token),
@@ -75,7 +75,7 @@ def get_cachestats(start_date,end_date):
     return req.json()
 
 def get_reports(date,days,opts):
-    '''Get reports.'''
+    """Get reports."""
 
     if opts['days']:
         start_date = (date - datetime.timedelta(days=days)).strftime(date_format)
@@ -120,7 +120,7 @@ def get_reports(date,days,opts):
             'config_nocache':config_nocache}
 
 def print_reports(reports):
-    '''Print reports.'''
+    """Print reports."""
 
     print "sum_data: {0} TB".format(reports['sum_data'])
     print "cache_tcp_hit_ratio: {0}%".format(reports['tcp_hit_ratio'])
