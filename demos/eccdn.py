@@ -3,7 +3,7 @@
 
 # Description: Get EdgeCast CDN usage via API
 # Author: Dong Guo
-# Last modified: 2015-03-10 23:01
+# Last modified: 2015-03-11 02:23 UTC
 
 import os
 import sys
