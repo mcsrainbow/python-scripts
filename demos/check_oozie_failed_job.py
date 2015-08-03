@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-# Description: 
+# Description: Get the logsLinks on related nodemanagers for Oozie failed job debuging
 # Author: Dong Guo
 # Last modified: 2015-07-30 08:50 UTC
 
