@@ -10,19 +10,20 @@ import sys
 
 def parse_opts():
     """Help messages(-h, --help)."""
-    
+
     import textwrap
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
         '''
         examples:
-          {0} --server idc1-server1 --job_id 0441398-150120233308020-oozie-oozi-W
+          {0} --server idc1-oozie1 --job_id 0021221-141009012304672-oozie-oozi-C@2345
+          {0} --server idc1-oozie1 --job_id 0471242-150120233308020-oozie-oozi-W
         '''.format(__file__)
         ))
-    
+
     parser.add_argument('--server', type=str, required=True, help='the oozie server address')
     parser.add_argument('--job_id', type=str, required=True, help='the oozie job id')
     args = parser.parse_args()
@@ -93,17 +94,26 @@ def get_ports(hostname):
     return False
 
 def oozie_debug(server,job_id):
-    
+
     import requests
     import json
 
-    req = requests.get('http://{0}:11000/oozie/v1/job/{1}'.format(server,job_id))
+    if "oozie-oozi-C" in job_id:
+        c_job_id = job_id
+        c_req = requests.get('http://{0}:11000/oozie/v1/job/{1}'.format(server,c_job_id))
+        c_req_dict = c_req.json()
+        w_job_id = c_req_dict['externalId']
+        print "externalId: {0}".format(w_job_id)
 
-    req_dict = req.json()
-    job_user = req_dict['user']
-    if req_dict['status'] == "KILLED":
-        for item_id in range(0,len(req_dict['actions'])):
-            item_dict = req_dict['actions'][item_id]
+    if "oozie-oozi-W" in job_id:
+        w_job_id = job_id
+
+    w_req = requests.get('http://{0}:11000/oozie/v1/job/{1}'.format(server,w_job_id))
+    w_req_dict = w_req.json()
+    job_user = w_req_dict['user']
+    if w_req_dict['status'] == "KILLED":
+        for item_id in range(0,len(w_req_dict['actions'])):
+            item_dict = w_req_dict['actions'][item_id]
             print "status: '{0}', name: '{1}'".format(item_dict['status'],item_dict['name'])
             if item_dict['status'] == 'ERROR':
                 print "  consoleUrl: '{0}'".format(item_dict['consoleUrl'])
@@ -139,7 +149,7 @@ def main():
     if len(sys.argv) < 2:
         os.system(__file__ + ' -h')
         return 2
-    
+
     opts = parse_opts()
     print '##################################'
     oozie_debug(opts['server'],opts['job_id'])
