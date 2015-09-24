@@ -88,8 +88,6 @@ def get_log_entries_by_incident(incid):
         if ea_logentry['type'] == 'acknowledge':
             was_there_an_ack = True
             first_ack_time = ea_logentry['created_at']
-
-        if ea_logentry['type'] == 'acknowledge':
             od_number_of_acks += 1
 
         if ea_logentry['type'] == 'resolve':
