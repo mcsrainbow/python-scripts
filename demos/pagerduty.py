@@ -57,7 +57,7 @@ def prettify(object):
 def get_incidents(start_date,end_date):
     '''Get incidents'''
     res_url = api_url + "incidents"  
-    req = requests.get(res_url, headers=headers, stream=True),
+    req = requests.get(res_url, headers=headers, stream=True,
                        params={'since':start_date,'until':end_date})
     return req.json()
 
