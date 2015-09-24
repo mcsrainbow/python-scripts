@@ -8,7 +8,6 @@
 # 2. for each incident, time between first notification to ack, number of notifications, 
 # number of ack, number of escalation, if resolved by API
 
-import requests
 import json
 import datetime
 import os
