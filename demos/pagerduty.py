@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Author: Dong Guo
-# Last Modified: 2014/07/28
+# Last Modified: 2015/09/28
 #
 # Reports:
 # 1. number of incidents per day (total, breakdown by host, breakdown by service)
