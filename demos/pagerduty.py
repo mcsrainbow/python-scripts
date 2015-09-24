@@ -120,25 +120,25 @@ def get_reports(date,days,opts):
         
         if incident['trigger_type'] == "email_trigger":
             inchost = "byEmail"
-            byemail = byemail + 1
+            byemail += 1
             subject = incident['trigger_summary_data']['subject']
         else:
             inchost = incident['trigger_summary_data']['HOSTNAME']
             if incident['trigger_summary_data']['pd_nagios_object'] == "service":
-                byservice = byservice + 1
+                byservice += 1
                 subject = incident['trigger_summary_data']['SERVICEDESC']
             elif incident['trigger_summary_data']['pd_nagios_object'] == "host":
-                byhost = byhost + 1
+                byhost += 1
                 subject = "DOWN"
 
         extra_info = get_log_entries_by_incident(incid)
         res_method = extra_info['res_method']
         if res_method == "nagios":
-            rbynagios = rbynagios + 1
+            rbynagios += 1
         if res_method == "timeout":
-            rbytimeout = rbytimeout + 1
+            rbytimeout += 1
         if res_method == "website":
-            rbyhuman = rbyhuman + 1
+            rbyhuman += 1
 
         if not opts['days']:
             time_bet_1stalert_and_1stack = extra_info['time_bet']
