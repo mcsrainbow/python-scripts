@@ -4,7 +4,8 @@
 # Last Modified: 2014/07/28
 # Reports:
 # 1. number of incidents per day (total, breakdown by host, breakdown by service)
-# 2. for each incident, time between first notification to ack, number of notifications, number of ack, number of escalation, if resolved by API
+# 2. for each incident, time between first notification to ack, number of notifications, 
+# number of ack, number of escalation, if resolved by API
 
 import requests
 import json
