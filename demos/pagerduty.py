@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-
+#
 # Author: Dong Guo
 # Last Modified: 2014/07/28
+#
 # Reports:
 # 1. number of incidents per day (total, breakdown by host, breakdown by service)
 # 2. for each incident, time between first notification to ack, number of notifications, 
@@ -22,6 +23,11 @@ api_token = "YOUR-API-TOKEN"
 
 date_format = "%Y-%m-%d"
 time_format = "%Y-%m-%dT%H:%M:%S"
+
+headers = {
+    'Authorization': 'Token token={0}'.format(api_token),
+    'Content-type': 'application/json',
+}
 
 def parse_opts():
     """Help messages(-h, --help)"""
@@ -45,15 +51,6 @@ def parse_opts():
     args = parser.parse_args()
     return {'days':args.d, 'date':args.s}
 
-class TokenAuth(requests.auth.AuthBase):
-    """Attaches PagerDuty Token Authentication to the given Request object"""
-    def __init__(self, token):
-        self.token = token
-
-    def __call__(self, req):
-        req.headers['Authorization'] = "Token token=%s" % self.token
-        return req
-
 def prettify(object):
     '''Format JSON in human-readable form'''
     return json.dumps(object,indent=1)
@@ -61,25 +58,20 @@ def prettify(object):
 def get_incidents(start_date,end_date):
     '''Get incidents'''
     res_url = api_url + "incidents"  
-    req = requests.get(res_url,auth=TokenAuth(api_token),
+    req = requests.get(res_url, headers=headers, stream=True),
                        params={'since':start_date,'until':end_date})
     return req.json()
 
 def get_incident_by_id(id):
     '''Get an incident by id'''
     res_url = api_url + "incidents/{0}".format(id)
-    req = requests.get(res_url,auth=TokenAuth(api_token))
+    req = requests.get(res_url, headers=headers, stream=True)
     return req.json()
 
 def get_log_entries_by_incident(incid):
     '''Get log entries by incident id'''
 
     from datetime import datetime
-
-    headers = {
-        'Authorization': 'Token token={0}'.format(api_token),
-        'Content-type': 'application/json',
-    }
 
     r1 = requests.get('{0}incidents/{1}/log_entries?include[]=channel'.format(api_url,incid), headers=headers, stream=True)
     od=list(reversed(r1.json()['log_entries']))
@@ -92,21 +84,18 @@ def get_log_entries_by_incident(incid):
             od_first_notification = ea_logentry
             was_there_an_initial_alert = True
             first_notification_time = od_first_notification['created_at']
-            break
-    for ea_logentry in od:
-        if ea_logentry['type'] == 'notify':
             od_number_of_notifications += 1
-    for ea_logentry in od:
+
         if ea_logentry['type'] == 'acknowledge':
             was_there_an_ack = True
             first_ack_time = ea_logentry['created_at']
-            break
-    for ea_logentry in od:
+
         if ea_logentry['type'] == 'acknowledge':
             od_number_of_acks += 1
-    for ea_logentry in od:
+
         if ea_logentry['type'] == 'resolve':
             res_method = ea_logentry['channel']['type']
+
     tf="%Y-%m-%dT%H:%M:%SZ"
     time_bet_1stalert_and_1stack = 0
     if not was_there_an_initial_alert or not was_there_an_ack:
@@ -124,14 +113,10 @@ def get_reports(date,days,opts):
     end_date = (date - datetime.timedelta(days=days)).strftime(date_format)
     info = get_incidents(start_date,end_date)
 
-    byservice = 0
-    byhost = 0
+    byservice = byhost = byemail = 0
     details = ""
-    byemail = 0
 
-    rbynagios = 0
-    rbytimeout = 0
-    rbyhuman = 0
+    rbynagios = rbytimeout = rbyhuman = 0
     for incident in info['incidents']:
         escanum = incident['number_of_escalations']
         incid = incident['id']
@@ -169,8 +154,7 @@ def get_reports(date,days,opts):
     return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'byemail':byemail,'details':details, 'rbynagios':rbynagios, 'rbytimeout':rbytimeout, 'rbyhuman':rbyhuman }
 
 if __name__=='__main__':
-    argv_len = len(sys.argv)
-    if argv_len < 2:
+    if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)
     opts = parse_opts()
