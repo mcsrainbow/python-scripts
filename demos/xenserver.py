@@ -145,8 +145,7 @@ class FabricSupport(object):
         return True
 
 if __name__=='__main__':
-    argv_len = len(sys.argv)
-    if argv_len < 2:
+    if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)
     opts = parse_opts()
