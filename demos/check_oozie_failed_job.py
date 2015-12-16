@@ -104,6 +104,8 @@ def oozie_debug(server,job_id):
         c_req_dict = c_req.json()
         w_job_id = c_req_dict['externalId']
         print "externalId: {0}".format(w_job_id)
+        if not w_job_id:
+            return False
 
     if "oozie-oozi-W" in job_id:
         w_job_id = job_id
