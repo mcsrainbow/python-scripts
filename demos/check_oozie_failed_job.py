@@ -80,12 +80,12 @@ def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", p
     p.close()
     return out
 
-def get_ports(hostname):
+def get_ports(hostname,nm_port):
     username = "root"
     pkey = "/root/.ssh/id_dsa"
     pkey_type = "dsa"
 
-    nm_pid = remote("""netstat -lntp |grep -w 8042 |awk '{print $NF}' |cut -d/ -f1""",hostname=hostname,username=username,pkey=pkey,pkey_type=pkey_type)
+    nm_pid = remote("""netstat -lntp |grep -w %s |awk '{print $NF}' |cut -d/ -f1""" % (nm_port),hostname=hostname,username=username,pkey=pkey,pkey_type=pkey_type)
     if nm_pid:
         ports = remote("""netstat -lntp |grep -w %s |awk '{print $4}' |sed s/://g |grep -Ev '8040|8042|13562' |xargs""" % (nm_pid),hostname=hostname,username=username,pkey=pkey,pkey_type=pkey_type)
         if ports:
@@ -136,10 +136,11 @@ def oozie_debug(server,job_id):
                             nodeHttpAddress = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['nodeHttpAddress']
                             assignedContainerId = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['assignedContainerId']
                             taskAttemptId = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['id']
-                            nm_hostname = nodeHttpAddress.replace(':8042','')
-                            nm_logsports = get_ports(nm_hostname).split()
+                            nm_hostname = nodeHttpAddress.split(':')[0]
+                            nm_port = nodeHttpAddress.split(':')[1]
+                            nm_logsports = get_ports(nm_hostname,nm_port).split()
                             for port in nm_logsports:
-                                nodeHttpAddress_logs = nodeHttpAddress.replace('8042',port)
+                                nodeHttpAddress_logs = nodeHttpAddress.replace(nm_port,port)
                                 finalUrl = "http://{0}/jobhistory/logs/{1}/{2}/{3}/{4}".format(rm_server,nodeHttpAddress_logs,assignedContainerId,taskAttemptId,job_user)
                                 finalreq = requests.get(finalUrl)
                                 if 'Logs not available' not in finalreq.text:
