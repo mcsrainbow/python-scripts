@@ -85,7 +85,7 @@ def get_results(opts):
         else:
             if req.status_code == requests.codes.ok:
                 if opts['content']:
-                    if req.content == opts['content']:
+                    if opts['content'] in req.content:
                         print 0
                     else:
                         print 1
