@@ -90,21 +90,21 @@ def check_value(value):
             print "WARN. The value of {0}: '{1}' doesn't match the given regex pattern: '{2}' | value={1}".format(opts['key'],value,opts['regex'])
             sys.exit(STATE_WARNING)
 
-    if value > opts['warn'] and value < opts['crit']:
+    if value >= opts['crit']:
+        print "CRIT. The value of {0}: {1} is greater than {2} | value={1}".format(opts['key'],value,opts['crit'])
+        sys.exit(STATE_CRITICAL)
+
+    elif value >= opts['warn']:
         print "WARN. The value of {0}: {1} is greater than {2} | value={1}".format(opts['key'],value,opts['warn'])
         sys.exit(STATE_WARNING)
 
-    if value > opts['crit']:
-        print "CRIT. The value of {0}: {1} is greater than {2} | value={1}".format(opts['key'],value,opts['crit'])
-        sys.exit(STATE_CRITICAL)
-    
-    print "OK. The value of {0}: {1} | value={1}".format(opts['key'],value)
-    sys.exit(STATE_OK)
+    else:
+        print "OK. The value of {0}: {1} | value={1}".format(opts['key'],value)
+        sys.exit(STATE_OK)
 
 if __name__=='__main__':
     # check arguments
-    argv_len = len(sys.argv)
-    if argv_len < 2:
+    if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(STATE_UNKNOWN)
 
