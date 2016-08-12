@@ -134,25 +134,26 @@ def oozie_debug(server,job_id):
                     jobhistoryUrl_0 = item_dict['consoleUrl'].replace('proxy/application','ws/v1/history/mapreduce/jobs/job').replace('8100','19888')
                     jobhistoryUrl_1 = jobhistoryUrl_0 + 'tasks'
                     jobhistoryUrl_1_req = requests.get(jobhistoryUrl_1)
-                    jobhistoryUrl_1_dict = jobhistoryUrl_1_req.json()
-                    for item_id in range(0,len(jobhistoryUrl_1_dict['tasks']['task'])):
-                        jobhistoryUrl_2 = jobhistoryUrl_1 + "/" + jobhistoryUrl_1_dict['tasks']['task'][item_id]['id'] + "/attempts"
-                        jobhistoryUrl_2_req = requests.get(jobhistoryUrl_2)
-                        jobhistoryUrl_2_dict = jobhistoryUrl_2_req.json()
-                        print "  logsLinks:"
-                        for item_id in range(0,len(jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'])):
-                            nodeHttpAddress = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['nodeHttpAddress']
-                            assignedContainerId = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['assignedContainerId']
-                            taskAttemptId = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['id']
-                            nm_hostname = nodeHttpAddress.split(':')[0]
-                            nm_port = nodeHttpAddress.split(':')[1]
-                            nm_logsports = get_ports(nm_hostname,nm_port).split()
-                            for port in nm_logsports:
-                                nodeHttpAddress_logs = nodeHttpAddress.replace(nm_port,port)
-                                finalUrl = "http://{0}/jobhistory/logs/{1}/{2}/{3}/{4}".format(rm_server,nodeHttpAddress_logs,assignedContainerId,taskAttemptId,job_user)
-                                finalreq = requests.get(finalUrl)
-                                if 'Logs not available' not in finalreq.text:
-                                    print "    " + finalUrl
+                    if jobhistoryUrl_1_req.status_code == requests.codes.ok:
+                        jobhistoryUrl_1_dict = jobhistoryUrl_1_req.json()
+                        for item_id in range(0,len(jobhistoryUrl_1_dict['tasks']['task'])):
+                            jobhistoryUrl_2 = jobhistoryUrl_1 + "/" + jobhistoryUrl_1_dict['tasks']['task'][item_id]['id'] + "/attempts"
+                            jobhistoryUrl_2_req = requests.get(jobhistoryUrl_2)
+                            jobhistoryUrl_2_dict = jobhistoryUrl_2_req.json()
+                            print "  logsLinks:"
+                            for item_id in range(0,len(jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'])):
+                                nodeHttpAddress = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['nodeHttpAddress']
+                                assignedContainerId = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['assignedContainerId']
+                                taskAttemptId = jobhistoryUrl_2_dict['taskAttempts']['taskAttempt'][item_id]['id']
+                                nm_hostname = nodeHttpAddress.split(':')[0]
+                                nm_port = nodeHttpAddress.split(':')[1]
+                                nm_logsports = get_ports(nm_hostname,nm_port).split()
+                                for port in nm_logsports:
+                                    nodeHttpAddress_logs = nodeHttpAddress.replace(nm_port,port)
+                                    finalUrl = "http://{0}/jobhistory/logs/{1}/{2}/{3}/{4}".format(rm_server,nodeHttpAddress_logs,assignedContainerId,taskAttemptId,job_user)
+                                    finalreq = requests.get(finalUrl)
+                                    if 'Logs not available' not in finalreq.text:
+                                        print "    " + finalUrl
 
             print "  *DEBUG*:"
             for key, value in item_dict.items():
