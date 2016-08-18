@@ -133,8 +133,8 @@ def oozie_debug(server,job_id):
                     print "  *NOTE*: The above consoleUrl from API may not correct, please manually check the URL:'http://{0}:11000/oozie'.".format(server)
                 else:
                     rm_server = item_dict['consoleUrl'].split('http://')[1].split('/')[0].replace('8100','19888')
-                    jobhistoryUrl_0 = item_dict['consoleUrl'].replace('proxy/application','
-                                                                      ws/v1/history/mapreduce/jobs/job').replace('8100','19888')
+                    jobhistoryUrl_0 = item_dict['consoleUrl'].replace('proxy/application',
+                                                                      'ws/v1/history/mapreduce/jobs/job').replace('8100','19888')
                     jobhistoryUrl_1 = jobhistoryUrl_0 + 'tasks'
                     jobhistoryUrl_1_req = requests.get(jobhistoryUrl_1)
                     if jobhistoryUrl_1_req.status_code == requests.codes.ok:
