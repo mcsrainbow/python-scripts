@@ -3,7 +3,7 @@
 
 # Description: Get the logsLinks on related nodemanagers for Oozie failed job debuging
 # Author: Dong Guo
-# Last modified: 2016-08-16
+# Last modified: 2016-09-23
 
 import os
 import sys
@@ -128,7 +128,7 @@ def oozie_debug(server,job_id):
         print "status: '{0}', name: '{1}'".format(item_dict['status'],item_dict['name'])
         if item_dict['status'] in ['ERROR','KILLED']:
             print "  consoleUrl: '{0}'".format(item_dict['consoleUrl'])
-            if item_dict['status'] == 'ERROR':
+            if item_dict['status'] == 'ERROR' and item_dict['consoleUrl']:
                 if 'proxy/application' not in item_dict['consoleUrl']:
                     print "  *NOTE*: The above consoleUrl from API may not correct, please manually check the URL:'http://{0}:11000/oozie'.".format(server)
                 else:
