@@ -21,14 +21,16 @@ def parse_opts():
         examples:
           {0} --server idc1-hive1 --job_id 0021221-141009012304672-oozie-oozi-C@7296
           {0} --server idc2-hive1 --job_id 0471242-150120233308020-oozie-oozi-W
+          {0} --server idc1-hive1 --job_id 0021221-141009012304672-oozie-oozi-C@7296 --active_rm idc1-rm2
         '''.format(__file__)
         ))
     
     parser.add_argument('--server', type=str, required=True, help='the oozie server address')
     parser.add_argument('--job_id', type=str, required=True, help='the oozie job id')
+    parser.add_argument('--active_rm', type=str, help='the active resourcemanager server address')
     args = parser.parse_args()
 
-    return {'server':args.server, 'job_id':args.job_id}
+    return {'server':args.server, 'job_id':args.job_id, 'active_rm':args.active_rm}
 
 class _AttributeString(str):
     """
@@ -95,7 +97,7 @@ def get_ports(hostname,nm_port):
 
     return False
 
-def oozie_debug(server,job_id):
+def oozie_debug(server,job_id,active_rm):
     
     import requests
     import json
@@ -132,9 +134,14 @@ def oozie_debug(server,job_id):
                 if 'proxy/application' not in item_dict['consoleUrl']:
                     print "  *NOTE*: The above consoleUrl from API may not correct, please manually check the URL:'http://{0}:11000/oozie'.".format(server)
                 else:
-                    rm_server = item_dict['consoleUrl'].split('http://')[1].split('/')[0].replace('8100','19888')
-                    jobhistoryUrl_0 = item_dict['consoleUrl'].replace('proxy/application',
-                                                                      'ws/v1/history/mapreduce/jobs/job').replace('8100','19888')
+                    rm_server = item_dict['consoleUrl'].split('http://')[1].split('/')[0].replace('8100','19888').split(':')[0]
+                    rm_server_port = item_dict['consoleUrl'].split('http://')[1].split('/')[0].replace('8100','19888').split(':')[1]
+                    if active_rm:
+                        jobhistoryUrl_0 = item_dict['consoleUrl'].replace(
+                            'proxy/application','ws/v1/history/mapreduce/jobs/job').replace('8100','19888').replace(rm_server,active_rm)
+                    else:
+                        jobhistoryUrl_0 = item_dict['consoleUrl'].replace(
+                            'proxy/application','ws/v1/history/mapreduce/jobs/job').replace('8100','19888')
                     jobhistoryUrl_1 = jobhistoryUrl_0 + 'tasks'
                     jobhistoryUrl_1_req = requests.get(jobhistoryUrl_1)
                     if jobhistoryUrl_1_req.status_code == requests.codes.ok:
@@ -153,8 +160,8 @@ def oozie_debug(server,job_id):
                                 nm_logsports = get_ports(nm_hostname,nm_port).split()
                                 for port in nm_logsports:
                                     nodeHttpAddress_logs = nodeHttpAddress.replace(nm_port,port)
-                                    finalUrl = "http://{0}/jobhistory/logs/{1}/{2}/{3}/{4}".format(
-                                        rm_server,nodeHttpAddress_logs,assignedContainerId,taskAttemptId,job_user)
+                                    finalUrl = "http://{0}:{1}/jobhistory/logs/{2}/{3}/{4}/{5}".format(
+                                        rm_server,rm_server_port,nodeHttpAddress_logs,assignedContainerId,taskAttemptId,job_user)
                                     finalreq = requests.get(finalUrl)
                                     if 'Logs not available' not in finalreq.text:
                                         print "    " + finalUrl
@@ -179,7 +186,7 @@ def main():
     
     opts = parse_opts()
     print '##################################'
-    oozie_debug(opts['server'],opts['job_id'])
+    oozie_debug(opts['server'],opts['job_id'],opts['active_rm'])
     print '##################################'
     print 'Please check the URLs in "logsLinks" above for detailed informations.'
     print 'Do NOT ignore the messages in "Log Type: stdout".'
