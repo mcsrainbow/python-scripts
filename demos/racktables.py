@@ -241,7 +241,7 @@ class GetServerInfo(object):
         return vm_list
     
     def get_rst_on(self):
-        colo_prefix = run("""hostname -s |egrep 'sc2-|iad2-' |cut -d- -f1""")
+        colo_prefix = run("""hostname -s |egrep 'idc1-|idc2-' |cut -d- -f1""")
         xs_pool_master = colo_prefix + '-vm1001'
 
         if not isup(xs_pool_master):
