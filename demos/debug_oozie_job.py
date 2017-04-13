@@ -132,7 +132,7 @@ def oozie_debug(server,job_id,active_rm):
             print "  consoleUrl: '{0}'".format(item_dict['consoleUrl'])
             if item_dict['status'] == 'ERROR' and item_dict['consoleUrl']:
                 if 'proxy/application' not in item_dict['consoleUrl']:
-                    print "  *NOTE*: The above consoleUrl from API may not correct, please manually check the URL:'http://{0}:11000/oozie'.".format(server)
+                    print "  *NOTE*: The above consoleUrl from API may not be correct, please manually check the URL:'http://{0}:11000/oozie'.".format(server)
                 else:
                     rm_server = item_dict['consoleUrl'].split('http://')[1].split('/')[0].replace('8100','19888').split(':')[0]
                     rm_server_port = item_dict['consoleUrl'].split('http://')[1].split('/')[0].replace('8100','19888').split(':')[1]
