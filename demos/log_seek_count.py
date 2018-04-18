@@ -7,7 +7,6 @@
 import os
 import re
 import sys
-import json
 import yaml
 
 YAML_DATA='/var/tmp/logs_seek_pos.yml'
