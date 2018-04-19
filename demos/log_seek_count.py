@@ -9,7 +9,7 @@ import re
 import sys
 import yaml
 
-YAML_DATA='/var/tmp/logs_seek_pos.yml'
+YAML_DATA = '/var/tmp/logs_seek_pos.yml'
 
 def parse_opts():
     """Help messages(-h, --help)."""
@@ -51,9 +51,9 @@ def get_last_seek_pos(file_path,seek_str):
 
 def save_last_seek_pos(file_path,last_seek_pos,seek_str):
 
-    seek_f=file(file_path,'r')
+    seek_f = file(file_path,'r')
     seek_f.seek(0,2)
-    last_seek_pos=seek_f.tell()
+    last_seek_pos = seek_f.tell()
     seek_f.close()
 
     with open(YAML_DATA) as f:
@@ -69,19 +69,19 @@ def save_last_seek_pos(file_path,last_seek_pos,seek_str):
     return True
 
 def get_seek_count(file_path,seek_str,ignore_str=None):
-    last_seek_pos=get_last_seek_pos(file_path,seek_str)    
+    last_seek_pos = get_last_seek_pos(file_path,seek_str)    
 
-    seek_f=file(file_path,'r')
+    seek_f = file(file_path,'r')
     seek_f.seek(last_seek_pos,0)
-    seek_count=0
-    lines=seek_f.readlines()
+    seek_count = 0
+    lines = seek_f.readlines()
     for line in lines:
         if ignore_str is not None:
             if re.search(seek_str,line) and not re.search(ignore_str,line):
-                seek_count=seek_count+1
+                seek_count = seek_count+1
         else:
             if re.search(seek_str,line):
-                seek_count=seek_count+1
+                seek_count = seek_count+1
     seek_f.close()
 
     save_last_seek_pos(file_path,last_seek_pos,seek_str)
@@ -98,10 +98,10 @@ def main():
             seek_f.write("logs: {}")
 
     opts = parse_opts()
-    seek_count=get_seek_count(opts['file_path'],opts['seek_str'],opts['ignore_str'])
+    seek_count = get_seek_count(opts['file_path'],opts['seek_str'],opts['ignore_str'])
 
     print seek_count
     return 0
 
-if __name__=='__main__':
+if __name__ == '__main__':
     sys.exit(main())
