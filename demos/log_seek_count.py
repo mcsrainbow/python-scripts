@@ -78,10 +78,10 @@ def get_seek_count(file_path,seek_str,ignore_str=None):
     for line in lines:
         if ignore_str is not None:
             if re.search(seek_str,line) and not re.search(ignore_str,line):
-                seek_count = seek_count+1
+                seek_count = seek_count + 1
         else:
             if re.search(seek_str,line):
-                seek_count = seek_count+1
+                seek_count = seek_count + 1
     seek_f.close()
 
     save_last_seek_pos(file_path,last_seek_pos,seek_str)
