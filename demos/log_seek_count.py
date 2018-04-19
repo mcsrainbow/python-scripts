@@ -100,6 +100,7 @@ def main():
     seek_count=get_seek_count(opts['file_path'],opts['seek_str'],opts['ignore_str'])
 
     print seek_count
+    return 0
 
 if __name__=='__main__':
     sys.exit(main())
