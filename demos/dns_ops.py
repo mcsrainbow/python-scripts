@@ -17,22 +17,22 @@ opt.add_argument("-p", "--point", help="points_to", required=True)
 
 args = opt.parse_args()
 
-path="/var/named/"
-tmp_path="/tmp/"
-dns_file="dnsadd"
-dns_master="server 10.100.1.2\n"
-zone="heylinux.com"
+path = "/var/named/"
+tmp_path = "/tmp/"
+dns_file = "dnsadd"
+dns_master = "server 10.100.1.2\n"
+zone = "heylinux.com"
 
-bind_lan="heylinux.com.lan"
+bind_lan = "heylinux.com.lan"
 
-bind_ptr_100="1.100.10.in-addr.arpa"
-bind_ptr_101="1.101.10.in-addr.arpa"
-bind_ptr_102="1.102.10.in-addr.arpa"
+bind_ptr_100 = "1.100.10.in-addr.arpa"
+bind_ptr_101 = "1.101.10.in-addr.arpa"
+bind_ptr_102 = "1.102.10.in-addr.arpa"
 
 dict = { "10.100.1": bind_ptr_100,
-     "10.101.1": bind_ptr_101,
-     "10.102.1": bind_ptr_102,
-    }
+    "10.101.1": bind_ptr_101,
+    "10.102.1": bind_ptr_102,
+}
 
 input_file = tmp_path + dns_file
  
@@ -106,20 +106,20 @@ def update_cname(args, f):
                     args.type, args.point)
 
         #no previous record of args.name of any type
-        check="prereq nxdomain " +  args.name + "." + zone + "\n"
+        check = "prereq nxdomain " +  args.name + "." + zone + "\n"
         f.write(check)
 
 
-        cmd="update add " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n" 
+        cmd = "update add " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n" 
     else:
         print "Deleting %s.%s %s %s\n" % (args.name, zone,
                      args.type, args.point)
 
         #args.name of specific type
-        check="prereq yxrrset " +  args.name + "." + zone + " " + args.type + " " + args.point + "\n"
+        check = "prereq yxrrset " +  args.name + "." + zone + " " + args.type + " " + args.point + "\n"
         f.write(check)
         
-        cmd="update delete " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n" 
+        cmd = "update delete " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n" 
 
     f.write(cmd)
     f.write("send\n") 
@@ -140,18 +140,18 @@ def update_a(args, f):
         if args.update == "add":
             print "Adding %s %s %s\n" % (args.name, 
                 args.type, args.point)
-            check="prereq nxdomain " + args.name + "." +  zone + "\n"
+            check = "prereq nxdomain " + args.name + "." +  zone + "\n"
             f.write(check)
 
-            cmd="update add " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n"
+            cmd = "update add " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n"
         else:
             print "Deleting %s %s %s\n" % (args.name, 
                 args.type, args.point)
             #args.name of specific type must exist
-            check="prereq yxrrset " +  args.name + "." + zone + " " + args.type + " " + args.point + "\n"
+            check = "prereq yxrrset " +  args.name + "." + zone + " " + args.type + " " + args.point + "\n"
             f.write(check)
 
-            cmd="update delete " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n" 
+            cmd = "update delete " + args.name + "." + zone + " 86400 " + args.type + " " + args.point + "\n" 
 
         f.write(cmd)
         f.write("send\n") 
@@ -195,14 +195,14 @@ def update_ptr(args, f):
                             args.type, 
                             args.point)
 
-            cmd="update add " + entry  + " 86400 " + args.type + " " + args.point + "\n"
+            cmd = "update add " + entry  + " 86400 " + args.type + " " + args.point + "\n"
 
         else:
             print "Deleting %s %s %s\n" % (entry, 
                             args.type, 
                             args.point)
 
-            cmd="update delete " + entry + " " + args.type + " " + args.point + "\n" 
+            cmd = "update delete " + entry + " " + args.type + " " + args.point + "\n" 
     
         f.write(cmd)
         f.write("send\n") 
@@ -218,18 +218,18 @@ if not os.path.isdir(tmp_path):
 
 with open(tmp_path + dns_file, "w") as f:
     if args.type == "CNAME":
-        private="Kidc1-server1.+157+01802.private"
-        key="Kidc1-server1.+157+01802.key"
+        private = "Kidc1-server1.+157+01802.private"
+        key = "Kidc1-server1.+157+01802.key"
 
         update_cname(args, f)
     elif args.type == "A":
-        private="Kidc1-server1.+157+01802.private"
-        key="Kidc1-server1.+157+01802.key"
+        private = "Kidc1-server1.+157+01802.private"
+        key = "Kidc1-server1.+157+01802.key"
 
         update_a(args, f)
     elif args.type == "PTR":
-        private="Kheylinux.com.+157+61482.private"
-        key="Kheylinux.com.+157+61482.key"
+        private = "Kheylinux.com.+157+61482.private"
+        key = "Kheylinux.com.+157+61482.key"
         
         update_ptr(args, f)
 
@@ -243,7 +243,7 @@ if not os.path.isfile(path + key):
     print "%s%s is missing" % (path, key)
     sys.exit(1)
 
-exec_cmd= "/usr/bin/nsupdate -k " + priv_key + " " + input_file
+exec_cmd = "/usr/bin/nsupdate -k " + priv_key + " " + input_file
 
 ret = subprocess.call(exec_cmd, shell=True)
 

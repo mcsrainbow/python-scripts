@@ -64,7 +64,7 @@ def check_cluster(trigger):
 
     return True
 
-if __name__=='__main__':
+if __name__ == '__main__':
     if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)

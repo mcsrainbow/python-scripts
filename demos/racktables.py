@@ -114,8 +114,8 @@ def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", p
 
     (stdin, stdout, stderr) = p.exec_command(cmd)
 
-    stdout_str=""
-    stderr_str=""
+    stdout_str = ""
+    stderr_str = ""
     for line in stdout.readlines():
         stdout_str = stdout_str + line
     for line in stderr.readlines():
@@ -648,10 +648,9 @@ def list_object(info):
     
     return True
 
-if __name__=='__main__':
+if __name__ == '__main__':
     # show help messages if no parameter
-    argv_len = len(sys.argv)
-    if argv_len < 2:
+    if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)
     opts = parse_opts()

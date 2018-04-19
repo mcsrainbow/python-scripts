@@ -88,8 +88,8 @@ def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", p
 
     (stdin, stdout, stderr) = p.exec_command(cmd)
 
-    stdout_str=""
-    stderr_str=""
+    stdout_str = ""
+    stderr_str = ""
     for line in stdout.readlines():
         stdout_str = stdout_str + line
     for line in stderr.readlines():

@@ -73,7 +73,7 @@ def get_log_entries_by_incident(incid):
     from datetime import datetime
 
     r1 = requests.get('{0}incidents/{1}/log_entries?include[]=channel'.format(api_url,incid), headers=headers, stream=True)
-    od=list(reversed(r1.json()['log_entries']))
+    od = list(reversed(r1.json()['log_entries']))
     od_first = od[0]
     res_method = first_notification_time = first_ack_time = 'None'
     od_number_of_notifications = od_number_of_acks = 0
@@ -93,7 +93,7 @@ def get_log_entries_by_incident(incid):
         if ea_logentry['type'] == 'resolve':
             res_method = ea_logentry['channel']['type']
 
-    tf="%Y-%m-%dT%H:%M:%SZ"
+    tf = "%Y-%m-%dT%H:%M:%SZ"
     time_bet_1stalert_and_1stack = 0
     if not was_there_an_initial_alert or not was_there_an_ack:
         time_bet_1stalert_and_1stack = 'None'
@@ -150,7 +150,7 @@ def get_reports(date,days,opts):
 
     return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'byemail':byemail,'details':details, 'rbynagios':rbynagios, 'rbytimeout':rbytimeout, 'rbyhuman':rbyhuman }
 
-if __name__=='__main__':
+if __name__ == '__main__':
     if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)

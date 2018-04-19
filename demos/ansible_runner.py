@@ -19,7 +19,7 @@ except ImportError:
     from ansible.utils.display import Display
     display = Display()
 
-WORKHOME='/opt/ansible'
+WORKHOME = '/opt/ansible'
 
 def parse_opts():
     """Help messages(-h, --help)."""

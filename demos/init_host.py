@@ -10,7 +10,7 @@ import sys
 import subprocess
 import paramiko
 
-WORKHOME='/local/path/to/workhome'
+WORKHOME = '/local/path/to/workhome'
 
 def parse_opts():
     """Help messages(-h, --help)."""
@@ -58,8 +58,8 @@ def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", p
 
     (stdin, stdout, stderr) = p.exec_command(cmd)
 
-    stdout_str=""
-    stderr_str=""
+    stdout_str = ""
+    stderr_str = ""
     for line in stdout.readlines():
         stdout_str = stdout_str + line
     for line in stderr.readlines():
@@ -172,5 +172,5 @@ def main():
 
     return 0
 
-if __name__=='__main__':
+if __name__ == '__main__':
     sys.exit(main())

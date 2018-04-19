@@ -95,7 +95,7 @@ def check_cluster(host,group,trigger,display,debug):
 
     return True
 
-if __name__=='__main__':
+if __name__ == '__main__':
     if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)

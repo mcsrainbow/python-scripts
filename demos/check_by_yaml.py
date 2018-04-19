@@ -102,7 +102,7 @@ def check_value(value):
         print "OK. The value of {0}: {1} | value={1}".format(opts['key'],value)
         sys.exit(STATE_OK)
 
-if __name__=='__main__':
+if __name__ == '__main__':
     # check arguments
     if len(sys.argv) < 2:
         os.system(__file__ + " -h")

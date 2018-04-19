@@ -30,9 +30,9 @@ def parse_opts():
     return {'zone_name': args.zone_name}
 
 def dump_records(zone_name):
-    customer_name="YOUR-CUSTOMER-NAME"
-    user_name="YOUR-USER-NAME"
-    password="YOUR-PASSWORD"
+    customer_name = "YOUR-CUSTOMER-NAME"
+    user_name = "YOUR-USER-NAME"
+    password = "YOUR-PASSWORD"
     
     api_url = "https://api.dynect.net"
     session_url = "/REST/Session/"
@@ -59,10 +59,9 @@ def dump_records(zone_name):
             rec_rdata = req_record.json()['data']['rdata']
             print """  ttl: {0} type: {1} rdata: {2}""".format(rec_ttl,rec_type,ast.literal_eval(json.dumps(rec_rdata)))
 
-if __name__=='__main__':
+if __name__ == '__main__':
     # show help messages if no parameter
-    argv_len = len(sys.argv)
-    if argv_len < 2:
+    if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)
     opts = parse_opts()

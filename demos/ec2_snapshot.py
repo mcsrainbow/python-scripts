@@ -19,8 +19,8 @@ except ImportError:
     sys.exit(1)
 
 # global settings
-AWS_ACCESS_KEY_ID='YOUR_AWS_ACCESS_KEY_ID'
-AWS_SECRET_ACCESS_KEY='YOUR_AWS_SECRET_ACCESS_KEY'
+AWS_ACCESS_KEY_ID = 'YOUR_AWS_ACCESS_KEY_ID'
+AWS_SECRET_ACCESS_KEY = 'YOUR_AWS_SECRET_ACCESS_KEY'
 
 def parse_opts():
     """Help messages (-h, --help)"""
@@ -98,9 +98,8 @@ def update_snapshot(region,instance_name,volume_device,retention_type,retention_
 
     return True
 
-if __name__=='__main__':
-    argv_len = len(sys.argv)
-    if argv_len < 2:
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
         os.system(__file__ + " -h")
         sys.exit(1)
 
