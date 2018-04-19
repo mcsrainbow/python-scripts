@@ -76,10 +76,10 @@ def get_seek_count(file_path,seek_str,ignore_str=None):
     lines=seek_f.readlines()
     for line in lines:
         if ignore_str is not None:
-            if seek_str in line and ignore_str not in line:
+            if re.match(seek_str,line) and not re.match(ignore_str,line):
                 seek_count=seek_count+1
         else:
-            if seek_str in line:
+            if re.match(seek_str,line):
                 seek_count=seek_count+1
     seek_f.close()
 

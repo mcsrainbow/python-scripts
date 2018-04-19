@@ -5,7 +5,6 @@
 # Author: Dong Guo
 
 import os
-import re
 import sys
 import json
 import yaml
