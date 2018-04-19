@@ -23,8 +23,9 @@ def parse_opts():
         '''
         examples:
           {0} --file_path /var/log/messages --seek_str "HANDLING MCE MEMORY ERROR"
-          {0} --file_path /var/log/messages --seek_str "Machine Check Exception"
-          {0} --file_path /var/log/nginx/error.log --seek_str "heylinux.com" --ignore_str "No such file or directory"
+          {0} --file_path /var/log/messages --seek_str "kernel:\s\[[\d\.]+\]\svw\[\d+\]:\ssegfault"
+          {0} --file_path /var/log/messages --seek_str "mdadm.*: Rebuild.*event detected"
+          {0} --file_path /var/log/nginx/error.log --seek_str "style.css" --ignore_str "No such file or directory"
         '''.format(__file__)
         ))
     
