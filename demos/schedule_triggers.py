@@ -11,7 +11,7 @@ import yaml
 import time
 from datetime import datetime
 
-YAML_DATA='/var/lib/zabbix/scheduled_triggers.yml'
+YAML_DATA = '/var/lib/zabbix/scheduled_triggers.yml'
 
 def parse_opts():
     """Help messages(-h, --help)."""
@@ -172,5 +172,5 @@ def main():
 
     return 0
 
-if __name__=='__main__':
+if __name__ == '__main__':
     sys.exit(main())
