@@ -37,5 +37,5 @@ def main():
     a.eat1('Guodong', 'mango')
     a.eat2('Luoshanjie', 'apple')
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()

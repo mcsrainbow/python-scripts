@@ -16,5 +16,5 @@ def main():
     test1(name='GuoDong', age=18, sex='boy')
     test2('GuoDong', 18, 'boy')
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
