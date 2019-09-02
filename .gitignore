@@ -1,4 +1,14 @@
-*.pyc
-*.swp
+# macOS
 .DS_Store
+
+# VIM
+*.swp
+
+# Pyc
+*.pyc
+
+# .vscode directory
+.vscode
+
+# .idea directory
 .idea
