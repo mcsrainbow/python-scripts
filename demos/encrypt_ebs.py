@@ -12,7 +12,7 @@ from datetime import datetime
 import boto3
 import textwrap
 
-REGION_NAME = 'ap-east-1'
+REGION = 'ap-east-1'
 
 def parse_opts():
     """Help messages(-h, --help)."""
@@ -62,8 +62,8 @@ def show_done_msg():
 def encrypt_ebs(opts):
     """Encrypt the EBS volumes of EC2 instance."""
 
-    ec2_c = boto3.client('ec2', region_name=REGION_NAME)
-    ec2_r = boto3.resource('ec2', region_name=REGION_NAME)
+    ec2_c = boto3.client('ec2', region_name=REGION)
+    ec2_r = boto3.resource('ec2', region_name=REGION)
 
     ec2_res = ec2_c.describe_instances(Filters=[{'Name': 'tag:Name','Values': [opts['name']]}])
 
@@ -76,7 +76,7 @@ def encrypt_ebs(opts):
     instance = ec2_r.Instance(instance_id)
 
     # get CMK id
-    kms_c = boto3.client('kms', region_name=REGION_NAME)
+    kms_c = boto3.client('kms', region_name=REGION)
     kms_res = kms_c.list_aliases()
     for kms_alias_item in kms_res['Aliases']:
         if kms_alias_item['AliasName'] == "alias/{0}".format(opts['key']):
