@@ -74,7 +74,7 @@ def encrypt_ebs(opts):
     instance = ec2_r.Instance(instance_id)
 
     # get CMK id
-    kms_c = boto3.client('kms')
+    kms_c = boto3.client('kms', region_name='ap-east-1')
     kms_res = kms_c.list_aliases()
     for kms_alias_item in kms_res['Aliases']:
         if kms_alias_item['AliasName'] == "alias/{0}".format(opts['key']):
