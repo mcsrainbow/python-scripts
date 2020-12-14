@@ -68,7 +68,10 @@ def encrypt_ebs(opts):
     ec2_res = ec2_c.describe_instances(Filters=[{'Name': 'tag:Name','Values': [opts['name']]}])
 
     # get instance id
-    if len(ec2_res['Reservations'][0]['Instances']) > 1:
+    if len(ec2_res['Reservations']) == 0:
+        print("ERROR: No such instance with tag:Name: {0}".format(opts['name']))
+        return False
+    elif len(ec2_res['Reservations'][0]['Instances']) > 1:
         print("ERROR: Found more than one instance with tag:Name: {0}".format(opts['name']))
         return False
 
