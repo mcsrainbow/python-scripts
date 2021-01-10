@@ -29,7 +29,7 @@ def rsync_data(rsync_src_dir,rsync_dst_dir,rsync_user,sftp_user_conf,sftp_prod_i
             date_str = datetime.now().strftime("%Y%m%d")
             rsync_cmd_str = "/usr/bin/rsync --timeout=10 --delete --log-file={0}/logs/rsync.{1}.log -ravz {0}/{2}/ {3}@{4}:{5}/{2}".format(rsync_src_dir,date_str,user,rsync_user,sftp_prod_ip,rsync_dst_dir)
             print("INFO: Running command: {0}".format(rsync_cmd_str))
-            rsync_cmd = subprocess.Popen(rsync_cmd_str, shell=True, executable=shell)
+            rsync_cmd = subprocess.Popen(rsync_cmd_str, shell=True, executable=None)
             (stdout, stderr) = rsync_cmd.communicate()
             if rsync_cmd.returncode == 0:
                 succeeded_timestamp = time.time()
