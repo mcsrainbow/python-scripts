@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-# Description: HTTPS requests check sanctum_monitor_* for OpenSearch
+# Description: HTTPS requests check index-name-* for OpenSearch
 # Author: Damon Guo
 
 import os
