@@ -29,7 +29,7 @@ if __name__ == '__main__':
     repo_name = "heylinux-repo-raw"
 
     init_file_list = []
-    init_res_data = get_list(api_url,repo_name,init_file_list,continuation_token=False)
+    init_res_data = get_list(api_url,repo_name,init_file_list,continuation_token=None)
 
     file_list = init_res_data["file_list"]
     continuation_token = init_res_data["continuation_token"]
