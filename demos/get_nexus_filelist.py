@@ -24,7 +24,6 @@ def get_list(api_url,repo_name,file_list,continuation_token):
     return {"file_list":file_list,"continuation_token":continuation_token}
 
 if __name__ == '__main__':
-
     api_url = "http://nexus.heylinux.com:8081/service/rest/v1/search/assets"
     repo_name = "heylinux-repo-raw"
 
