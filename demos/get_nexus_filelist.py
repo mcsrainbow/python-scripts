@@ -1,6 +1,6 @@
 #!/bin/env python
 #
-# Get list of all artifacts from a Nexus raw repository and write into file_list.txt
+# Get the list of all artifacts from a Nexus raw repository and write it into file_list.txt
 # Author: Damon Guo
 
 import requests
