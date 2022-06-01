@@ -29,6 +29,8 @@ def parse_opts():
           {0} -n opensearch.heylinux.com -a username:password -i "index-name-*" -d key1:value1,key2:"word1 word2 word3"
           {0} -n opensearch.heylinux.com -a username:password -i "logstash-eks-containers-log-*" \
               -d kubernetes.container.name:"app-auth",message:"LOGIN_ERROR LinuxPlatform" -m 240
+          {0} -n opensearch.heylinux.com -a username:password -i "logstash-eks-containers-log-*" \
+              -d kubernetes.container.name:"app-auth",message:"LOGIN_ERROR LinuxPlatform" -m 240 -c
         '''.format(__file__)
         ))
 
@@ -39,9 +41,10 @@ def parse_opts():
     parser.add_argument('-o', metavar='output', type=str, default='message', help='display value of the key in output [default: message]')
     parser.add_argument('-m', metavar='minute', type=int, default=1440, help='period to search [default: 1440]')
     parser.add_argument('-v', action="store_true", default=False, help='debug with json body')
+    parser.add_argument('-c', action="store_true", default=False, help='count the lines of output')
 
     args = parser.parse_args()
-    return {'domain':args.n, 'auth':args.a, 'index':args.i, 'data':args.d, 'output':args.o, 'minute':args.m, 'debug':args.v}
+    return {'domain':args.n, 'auth':args.a, 'index':args.i, 'data':args.d, 'output':args.o, 'minute':args.m, 'debug':args.v, 'count':args.c}
 
 def get_results(opts):
     """Get results with given parameters."""
@@ -77,12 +80,17 @@ def get_results(opts):
         res = requests.post(url, headers=headers, auth=httpauth, json=data, verify=False, timeout=5)
         if res.status_code == requests.codes.ok:
             res_dict = res.json()
-            if len(res_dict["hits"]["hits"]) == 0:
-                print("INFO: No such message found")
+            hits_count = len(res_dict["hits"]["hits"])
+            if not opts['count']:
+                if hits_count == 0:
+                    print("INFO: No such message found")
+                else:
+                    for i in range(hits_count):
+                        output = res_dict["hits"]["hits"][i]["_source"][opts['output']]
+                        print(output)
             else:
-                for i in range(len(res_dict["hits"]["hits"])):
-                    output = res_dict["hits"]["hits"][i]["_source"][opts['output']]
-                    print(output)
+                print(hits_count)
+
             if opts['debug']:
                 print(json.dumps(res_dict,indent=2))
         else:
