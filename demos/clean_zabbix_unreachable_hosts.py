@@ -39,7 +39,7 @@ def parse_opts():
 def cleanup(opts):
     """Clean unreachable hosts with given parameters."""
 
-    url = "https://{0}/api_jsonrpc.php".format(opts['url'])
+    url = "{0}/api_jsonrpc.php".format(opts['url'])
 
     username = opts['auth'].split(':')[0]
     password = opts['auth'].split(':')[1]
