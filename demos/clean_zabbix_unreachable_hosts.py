@@ -126,12 +126,12 @@ def cleanup(opts):
 
             # delete unreachable host
             json_data_4 = {
-                                "jsonrpc": "2.0",
-                                "method": "host.delete",
-                                "params": unreachable_hosts_list,
-                                "auth": auth_token,
-                                "id": 4
-                            }
+                            "jsonrpc": "2.0",
+                            "method": "host.delete",
+                            "params": unreachable_hosts_list,
+                            "auth": auth_token,
+                            "id": 4
+                          }
 
             if len(unreachable_hosts_list) > 0:
                 res_4 = requests.post(url, headers=headers, json=json_data_4, verify=False, timeout=5)
