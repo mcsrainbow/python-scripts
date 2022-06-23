@@ -121,7 +121,6 @@ def cleanup(opts):
                         for group in item["groups"]:
                             if group["name"] != "Discovered hosts":
                                 group_names.append(group["name"])
-
                         print("INFO: Found unreachable host: '{0}' from hostgroup: '{1}'".format(item["host"],",".join(group_names)))
 
             # delete unreachable host
@@ -137,7 +136,7 @@ def cleanup(opts):
                 res_4 = requests.post(url, headers=headers, json=json_data_4, verify=False, timeout=5)
                 if res_4.status_code == requests.codes.ok:
                     res_4_dict = res_4.json()
-                print("INFO: Deleted above {0} unreachable hosts".format(len(unreachable_hosts_list)))
+                    print("INFO: Deleted above {0} unreachable hosts".format(len(unreachable_hosts_list)))
             else:
                 print("INFO: No such unreachable host")
 
