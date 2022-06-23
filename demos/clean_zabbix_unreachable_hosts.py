@@ -123,7 +123,7 @@ def cleanup(opts):
                                 group_names.append(group["name"])
                         print("INFO: Found unreachable host: '{0}' from hostgroup: '{1}'".format(item["host"],",".join(group_names)))
 
-            # delete unreachable host
+            # delete unreachable hosts
             json_data_4 = {
                             "jsonrpc": "2.0",
                             "method": "host.delete",
