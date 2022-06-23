@@ -25,7 +25,7 @@ def parse_opts():
         description=textwrap.dedent(
         '''
         examples:
-          {0} -n https://zabbix.heylinux.com -a username:password -g hostgroup1,hostgroup2
+          {0} -u https://zabbix.heylinux.com -a username:password -g hostgroup1,hostgroup2
         '''.format(__file__)
         ))
 
