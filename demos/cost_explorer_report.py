@@ -1,4 +1,4 @@
-#!/opt/sanctum/miniconda/envs/sanctum/bin/python
+#!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
 # Description: Generate Cost Explorer report by Cost Allocation Tag
