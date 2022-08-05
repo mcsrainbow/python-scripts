@@ -83,7 +83,7 @@ def get_costs(start_date,end_date,tag_key,costs_list,nextpage_token):
         )
 
     if "NextPageToken" in res:
-        nextpage_toke = res['NextPageToken']
+        nextpage_token = res['NextPageToken']
 
     for item in res['ResultsByTime'][0]['Groups']:
         costs_list.append(item)
