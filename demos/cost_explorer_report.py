@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import datetime
+import boto3
 
 def parse_opts():
     """Help messages(-h, --help)."""
@@ -33,8 +34,6 @@ def parse_opts():
 
 def get_costs(start_date,end_date,tag_key,costs_list,nextpage_token):
     """ Get monthly costs by cost_allocation_tag key """
-
-    import boto3
 
     client = boto3.client('ce')
 
@@ -123,7 +122,7 @@ def get_results(opts):
 
     return({'last_month_str':last_month_str, 'costs_list':costs_list})
 
-def csv_save(costs_csv_path,costs_results):
+def csv_save(costs_csv_dir,costs_results):
     """ Save the costs list as a CSV file """
 
     costs_list = costs_results['costs_list']
@@ -156,7 +155,7 @@ def csv_save(costs_csv_path,costs_results):
     total_cost = sum(csv_dict.values())
     csv_dict['Total'] = total_cost
 
-    costs_csv = "{0}/costs-{1}.csv".format(costs_csv_path,costs_month_str)
+    costs_csv = "{0}/costs-{1}.csv".format(costs_csv_dir,costs_month_str)
 
     if os.path.exists(costs_csv):
         open(costs_csv, 'w').close()
@@ -166,7 +165,26 @@ def csv_save(costs_csv_path,costs_results):
             f.write("{0},{1}\n".format(k,v))
         f.close()
 
-    return(True)
+    return(costs_csv)
+
+def s3_copy(profile_name,costs_csv,s3_bucket_dir,last_month_str):
+    """ Copy the costs_csv to S3 bucket """
+
+    session = boto3.Session(profile_name=profile_name)
+    s3_client = session.client('s3')
+
+    s3_bucket_name = s3_bucket_dir.split('/')[0]
+    costs_csv_key = costs_csv.split('/')[-1]
+    s3_bucket_key = "{0}/{1}/{2}".format('/'.join(s3_bucket_dir.split('/')[1:]),last_month_str,costs_csv_key)
+
+    try:
+        res = s3_client.upload_file(costs_csv, s3_bucket_name, s3_bucket_key)
+    except:
+        print("ERROR: Failed to upload '{0}' to 's3://{1}/{2}'".format(costs_csv,s3_bucket_name,s3_bucket_key))
+        return(False)
+    else:
+        print("INFO: Uploaded '{0}' to 's3://{1}/{2}'".format(costs_csv,s3_bucket_name,s3_bucket_key))
+        return(True)
 
 def main():
     if len(sys.argv) < 2:
@@ -175,11 +193,17 @@ def main():
 
     opts = parse_opts()
 
-    costs_csv_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+    costs_csv_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
     costs_results = get_results(opts)
-    csv_save(costs_csv_path,costs_results)
+    costs_csv = csv_save(costs_csv_dir,costs_results)
 
-    return(0)
+    profile_name = "reports"
+    s3_bucket_dir = "heylinux-reports/aws/costs"
+    last_month_str = costs_results['last_month_str']
+    if s3_copy(profile_name,costs_csv,s3_bucket_dir,last_month_str):
+        return(0)
+    else:
+        return(1)
 
 if __name__=='__main__':
     sys.exit(main())
