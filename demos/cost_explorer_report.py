@@ -136,9 +136,9 @@ def csv_save(costs_csv_path,costs_results):
         item_usd = item['Metrics']['BlendedCost']['Amount']
 
         if item_app:
-            app_name = item_app
+            app_name = "Tag: {0}".format(item_app)
         else:
-            app_name = item_srv
+            app_name = "Service: {0}".format(item_srv)
         if app_name in cost_dict:
             cost_dict[app_name].append(float(item_usd))
         else:
@@ -146,6 +146,8 @@ def csv_save(costs_csv_path,costs_results):
 
     csv_dict = {}
     for k,v in cost_dict.items():
+        for i in ["Amazon ", "Amazon", "AWS ", "AWS"]:
+            k = k.replace(i,"")
         app_name = k
         app_cost = sum(v)
         if int(app_cost) > 0:
