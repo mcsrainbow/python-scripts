@@ -33,7 +33,7 @@ def parse_opts():
     return({'tag_key':args.k, 'month':args.m})
 
 def get_costs(start_date,end_date,tag_key,costs_list,nextpage_token):
-    """ Get monthly costs by cost_allocation_tag key """
+    """Get monthly costs by cost_allocation_tag key"""
 
     client = boto3.client('ce')
 
@@ -123,7 +123,7 @@ def get_results(opts):
     return({'last_month_str':last_month_str, 'costs_list':costs_list})
 
 def csv_save(costs_csv_dir,costs_results):
-    """ Save the costs list as a CSV file """
+    """Save the costs list as a CSV file"""
 
     costs_list = costs_results['costs_list']
     costs_month_str = costs_results['last_month_str']
@@ -168,7 +168,7 @@ def csv_save(costs_csv_dir,costs_results):
     return(costs_csv)
 
 def s3_copy(profile_name,costs_csv,s3_bucket_dir,last_month_str):
-    """ Copy the costs_csv to S3 bucket """
+    """Copy the costs_csv to S3 bucket"""
 
     session = boto3.Session(profile_name=profile_name)
     s3_client = session.client('s3')
