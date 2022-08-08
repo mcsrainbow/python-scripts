@@ -175,7 +175,7 @@ def main():
 
     opts = parse_opts()
 
-    costs_csv_path = "."
+    costs_csv_path = os.path.abspath(os.path.dirname(sys.argv[0]))
     costs_results = get_results(opts)
     csv_save(costs_csv_path,costs_results)
 
