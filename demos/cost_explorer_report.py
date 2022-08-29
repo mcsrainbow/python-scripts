@@ -153,15 +153,17 @@ def csv_save(costs_csv_dir,costs_results):
             cost_dict[app_name] = [float(item_usd)]
 
     csv_dict = {}
+    csv_dict_raw = {}
     for k,v in cost_dict.items():
         for i in ["Amazon ", "Amazon", "AWS ", "AWS"]:
             k = k.replace(i,"")
         app_name = k
         app_cost = sum(v)
+        csv_dict_raw[app_name] = app_cost
         if app_cost > 1 or app_cost < 0:
             csv_dict[app_name] = round(app_cost,2)
 
-    total_cost = sum(csv_dict.values())
+    total_cost = sum(csv_dict_raw.values())
     csv_dict['Total'] = round(total_cost,2)
 
     costs_csv = "{0}/costs-{1}.csv".format(costs_csv_dir,costs_month_str)
