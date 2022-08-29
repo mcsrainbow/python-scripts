@@ -104,19 +104,28 @@ def get_results(opts):
         last_month = date_first - datetime.timedelta(days=1)
         last_month_y = last_month.strftime("%Y")
         last_month_m = last_month.strftime("%m")
-
-    last_month_first_date = "{0}-{1}-01".format(last_month_y,last_month_m)
-    last_month_last_date = "{0}-{1}-{2}".format(last_month_y,last_month_m,calendar.monthrange(int(last_month_y),int(last_month_m))[1])
+       
+    last_month_start_date = "{0}-{1}-01".format(last_month_y,last_month_m)
     last_month_str = "{0}-{1}".format(last_month_y,last_month_m)
 
+    if int(last_month_m) == 12:
+        next_month_y = int(last_month_y) + 1
+        next_month_m = 1
+    else:
+        next_month_y = last_month_y
+        next_month_m = int(last_month_m) + 1
+
+    next_month_first_date = "{0}-{1:02d}-01".format(next_month_y,next_month_m)
+    last_month_end_date = next_month_first_date
+
     init_costs_list = []
-    init_costs_data = get_costs(last_month_first_date,last_month_last_date,opts['tag_key'],init_costs_list,nextpage_token="")
+    init_costs_data = get_costs(last_month_start_date,last_month_end_date,opts['tag_key'],init_costs_list,nextpage_token="")
 
     costs_list = init_costs_data["costs_list"]
     nextpage_token = init_costs_data["nextpage_token"]
 
     while nextpage_token:
-        costs_data = get_costs(last_month_first_date,last_month_last_date,opts['tag_key'],costs_list,nextpage_token)
+        costs_data = get_costs(last_month_start_date,last_month_end_date,opts['tag_key'],costs_list,nextpage_token)
         costs_list = costs_data["costs_list"]
         nextpage_token = costs_data["nextpage_token"]
 
@@ -149,11 +158,11 @@ def csv_save(costs_csv_dir,costs_results):
             k = k.replace(i,"")
         app_name = k
         app_cost = sum(v)
-        if int(app_cost) > 0:
-            csv_dict[app_name] = int(app_cost)
+        if app_cost > 1 or app_cost < 0:
+            csv_dict[app_name] = round(app_cost,2)
 
     total_cost = sum(csv_dict.values())
-    csv_dict['Total'] = total_cost
+    csv_dict['Total'] = round(total_cost,2)
 
     costs_csv = "{0}/costs-{1}.csv".format(costs_csv_dir,costs_month_str)
 
