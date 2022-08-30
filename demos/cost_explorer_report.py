@@ -11,7 +11,7 @@ import datetime
 import boto3
 
 def parse_opts():
-    """Help messages(-h, --help)."""
+    """Help messages(-h, --help)"""
 
     import textwrap
     import argparse
@@ -90,7 +90,7 @@ def get_costs(start_date,end_date,tag_key,costs_list,nextpage_token):
     return({'costs_list':costs_list, 'nextpage_token':nextpage_token})
 
 def get_results(opts):
-    """Get results with given parameters."""
+    """Get results with given parameters"""
 
     import calendar
 
@@ -160,6 +160,7 @@ def csv_save(costs_csv_dir,costs_results):
         app_name = k
         app_cost = sum(v)
         csv_dict_raw[app_name] = app_cost
+        # ignore costs in [0,1]
         if app_cost > 1 or app_cost < 0:
             csv_dict[app_name] = round(app_cost,2)
 
