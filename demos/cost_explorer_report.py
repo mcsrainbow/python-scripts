@@ -92,8 +92,6 @@ def get_costs(start_date,end_date,tag_key,costs_list,nextpage_token):
 def get_results(opts):
     """Get results with given parameters"""
 
-    import calendar
-
     if opts['month']:
         last_month_str = opts['month']
         last_month_y = last_month_str.split('-')[0]
