@@ -203,7 +203,10 @@ def main():
 
     opts = parse_opts()
 
-    costs_csv_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+    costs_csv_dir = "{0}/costs_csv".format(os.path.abspath(os.path.dirname(sys.argv[0])))
+    if not os.path.isdir(costs_csv_dir):
+        os.mkdir(costs_csv_dir)
+        
     costs_results = get_results(opts)
     costs_csv = csv_save(costs_csv_dir,costs_results)
 
