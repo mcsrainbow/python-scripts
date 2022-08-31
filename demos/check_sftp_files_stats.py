@@ -150,7 +150,7 @@ def main():
     stats_yml = "{0}/stats.yml".format(stats_dir)
 
     if not os.path.isdir(stats_dir):
-        os.mkdir(stats_dir,0755)
+        os.mkdir(stats_dir)
 
     if not os.path.isfile(stats_yml) or os.stat(stats_yml).st_size == 0:
         with open(stats_yml, "w") as f:
