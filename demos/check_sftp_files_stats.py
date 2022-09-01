@@ -51,7 +51,7 @@ def get_results(sftp_opts,folder_list,stats_yml):
             nbytes /= 1024.
             i += 1
         j = ('%.2f' % nbytes).rstrip('0').rstrip('.')
-        return('{0} {1}'.format(j, suffixes[i]))
+        return('{0}{1}'.format(j, suffixes[i]))
 
     def human_time_duration(seconds):
         time_duration_units = (
@@ -67,7 +67,7 @@ def get_results(sftp_opts,folder_list,stats_yml):
         for unit, div in time_duration_units:
             amount, seconds = divmod(int(seconds), div)
             if amount > 0:
-                parts.append('{} {}{}'.format(amount, unit, "" if amount == 1 else "s"))
+                parts.append('{}{}{}'.format(amount, unit, "" if amount == 1 else "s"))
         return(' '.join(parts))
 
     with open(stats_yml) as f:
