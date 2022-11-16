@@ -31,6 +31,10 @@ def parse_opts():
               -d kubernetes.container.name:"app-auth",message:"LOGIN_ERROR LinuxPlatform" -m 240
           {0} -n opensearch.heylinux.com -a username:password -i "logstash-eks-containers-log-*" \
               -d kubernetes.container.name:"app-auth",message:"LOGIN_ERROR LinuxPlatform" -m 240 -c
+          {0} -n opensearch.heylinux.com -a username:password -i "logstash-eks-containers-log-*" \
+              -d "kubernetes.pod.name:*job*,message:*error*" -m 240 -w
+          {0} -n opensearch.heylinux.com -a username:password -i "logstash-eks-containers-log-*" \
+              -d "kubernetes.pod.name:*job*,message:*error*" -m 240 -w -c
         '''.format(__file__)
         ))
 
@@ -40,6 +44,7 @@ def parse_opts():
     parser.add_argument('-d', metavar='data', type=str, required=True, help='key1:value1,key2:value2,... to search')
     parser.add_argument('-o', metavar='output', type=str, default='message', help='display value of the key in output [default: message]')
     parser.add_argument('-m', metavar='minute', type=int, default=1440, help='period to search [default: 1440]')
+    parser.add_argument('-w', action="store_true", default=False, help='wildcard search')
     parser.add_argument('-v', action="store_true", default=False, help='debug with json body')
     parser.add_argument('-c', action="store_true", default=False, help='count the lines of output')
 
@@ -71,7 +76,10 @@ def get_results(opts):
                 ]}}}
 
     for k,v in kv_dict.items():
-        match_item = {"match":{k:{"query":v,"operator":"and"}}}
+        if opts['wildcard']:
+            match_item = {"wildcard":{k:{"wildcard":v,"boost":1}}}
+        else:
+            match_item = {"match":{k:{"query":v,"operator":"and"}}}
         data["query"]["bool"]["must"].append(match_item)
 
     headers = {"Content-Type": "application/json; charset=utf-8"}
