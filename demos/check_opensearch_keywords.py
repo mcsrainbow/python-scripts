@@ -49,7 +49,7 @@ def parse_opts():
     parser.add_argument('-c', action="store_true", default=False, help='count the lines of output')
 
     args = parser.parse_args()
-    return {'domain':args.n, 'auth':args.a, 'index':args.i, 'data':args.d, 'output':args.o, 'minute':args.m, 'debug':args.v, 'count':args.c}
+    return {'domain':args.n, 'auth':args.a, 'index':args.i, 'data':args.d, 'output':args.o, 'minute':args.m, 'wildcard':args.w, 'debug':args.v, 'count':args.c}
 
 def get_results(opts):
     """Get results with given parameters."""
