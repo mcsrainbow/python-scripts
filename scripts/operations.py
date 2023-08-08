@@ -5,7 +5,7 @@ A simple interface to execute shell commands.
 Reference: fabric/operations.py.
 
 Examples:
-    >>> from operations import local,remote,get,put
+    >>> from operations import local_cmd,remote_cmd,sftp_get,sftp_put
 
     >>> out = local_cmd('uname -r')
     >>> print out
