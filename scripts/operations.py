@@ -7,7 +7,7 @@ Reference: fabric/operations.py.
 Examples:
     >>> from operations import local,remote,get,put
 
-    >>> out = local('uname -r')
+    >>> out = local_cmd('uname -r')
     >>> print out
     2.6.32
     >>> print out.stdout
@@ -17,7 +17,7 @@ Examples:
     >>> print out.succeeded
     True
 
-    >>> out = remote('hostname --fqdn',hostname='heylinux.com',username='jobs',
+    >>> out = remote_cmd('hostname --fqdn',hostname='heylinux.com',username='jobs',
                      pkey='/path/to/rsa',port=8022)
     >>> print out
     heylinux.com
@@ -26,7 +26,7 @@ Examples:
     >>> print out.succeeded
     True
 
-    >>> out = get('/tmp/remote.txt','/tmp/local.txt',hostname='heylinux.com',username='jobs',
+    >>> out = sftp_get('/tmp/remote.txt','/tmp/local.txt',hostname='heylinux.com',username='jobs',
                   pkey='/path/to/dsa',pkey_type='dsa',port=8022)
     >>> print out.failed
     True 
@@ -35,7 +35,7 @@ Examples:
     >>> print out.stderr
     No such file or directory
 
-    >>> out = put('/tmp/local.txt','/tmp/remote.txt',hostname='heylinux.com',username='jobs',
+    >>> out = sftp_put('/tmp/local.txt','/tmp/remote.txt',hostname='heylinux.com',username='jobs',
                   password='apple')
     >>> print out.failed
     False
@@ -54,7 +54,7 @@ class _AttributeString(str):
     def stdout(self):
         return str(self)
 
-def local(cmd, capture=True, shell=None):
+def local_cmd(cmd, capture=True, shell=None):
     out_stream = subprocess.PIPE
     err_stream = subprocess.PIPE
     p = subprocess.Popen(cmd, shell=True, stdout=out_stream, stderr=err_stream, executable=shell)
@@ -73,7 +73,7 @@ def local(cmd, capture=True, shell=None):
 
     return out
 
-def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
+def remote_cmd(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
     p = paramiko.SSHClient()
     p.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -127,7 +127,7 @@ def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey
     out = _AttributeString()
     out.failed = False
     out.stderr = None
-    
+
     if transfer_type is not None:
         try:
             if transfer_type == "get":
@@ -143,10 +143,10 @@ def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey
     p.close()
     return out
 
-def get(remote_path, local_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
+def sftp_get(remote_path, local_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
     return sftp(remote_path, local_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, 
                 port=port, transfer_type="get")
 
-def put(local_path, remote_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
+def sftp_put(local_path, remote_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
     return sftp(local_path, remote_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, 
                 port=port, transfer_type="put")
