@@ -29,9 +29,9 @@ Examples:
     >>> out = sftp_get('/tmp/remote.txt','/tmp/local.txt',hostname='heylinux.com',username='jobs',
                   pkey='/path/to/dsa',pkey_type='dsa',port=8022)
     >>> print out.failed
-    True 
+    True
     >>> print out.succeeded
-    False 
+    False
     >>> print out.stderr
     No such file or directory
 
@@ -109,7 +109,7 @@ def remote_cmd(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa
     p.close()
     return out
 
-def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey_type="rsa", 
+def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey_type="rsa",
          port=22, transfer_type=None):
     p = paramiko.Transport((hostname,port))
 
@@ -144,9 +144,9 @@ def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey
     return out
 
 def sftp_get(remote_path, local_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
-    return sftp(remote_path, local_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, 
+    return sftp(remote_path, local_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type,
                 port=port, transfer_type="get")
 
 def sftp_put(local_path, remote_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
-    return sftp(local_path, remote_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type, 
+    return sftp(local_path, remote_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type,
                 port=port, transfer_type="put")
