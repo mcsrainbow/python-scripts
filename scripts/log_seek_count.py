@@ -51,7 +51,7 @@ def get_last_seek_pos(file_path,seek_str):
 
 def save_last_seek_pos(file_path,last_seek_pos,seek_str):
 
-    seek_f = file(file_path,'r')
+    seek_f = open(file_path,'r')
     seek_f.seek(0,2)
     last_seek_pos = seek_f.tell()
     seek_f.close()
@@ -71,7 +71,7 @@ def save_last_seek_pos(file_path,last_seek_pos,seek_str):
 def get_seek_count(file_path,seek_str,ignore_str=None):
     last_seek_pos = get_last_seek_pos(file_path,seek_str)    
 
-    seek_f = file(file_path,'r')
+    seek_f = open(file_path,'r')
     seek_f.seek(last_seek_pos,0)
     seek_count = 0
     lines = seek_f.readlines()
@@ -100,7 +100,7 @@ def main():
     opts = parse_opts()
     seek_count = get_seek_count(opts['file_path'],opts['seek_str'],opts['ignore_str'])
 
-    print seek_count
+    print(seek_count)
     return 0
 
 if __name__ == '__main__':

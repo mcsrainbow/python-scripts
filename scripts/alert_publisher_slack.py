@@ -11,7 +11,7 @@ import requests
 import textwrap
 
 if len(sys.argv) < 2 or '-h' in sys.argv:
-    print "Usage: {0} [/path/to/json_alert_file]".format(sys.argv[0])
+    print("Usage: {0} [/path/to/json_alert_file]".format(sys.argv[0]))
     sys.exit(1)
 
 slack_webhook_url = 'https://hooks.slack.com/services/YOUR/WEBHOOK/URLSTRING'
@@ -57,7 +57,7 @@ with open(json_alert_file) as data_file:
                                 headers={'content-type':'application/json'},
                                 timeout=10)
         except Exception as error:
-            print "Error occured while posting data to Slack: {0}".format(str(error))
+            print("Error occured while posting data to Slack: {0}".format(str(error)))
             sys.exit(1)
         
-        print "Respone code is {0}".format(req.status_code)
+        print("Respone code is {0}".format(req.status_code))
