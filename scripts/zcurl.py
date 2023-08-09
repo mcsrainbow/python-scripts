@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-#-*- coding:utf-8 -*-
+#!/usr/bin/env python3
 
 # Description: HTTP requests check for Zabbix
 # Author: Dong Guo
@@ -8,12 +7,11 @@ import os
 import sys
 import requests
 import time
+import argparse
+import textwrap
 
 def parse_opts():
     """Help messages(-h, --help)."""
-
-    import textwrap
-    import argparse
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -39,7 +37,7 @@ def parse_opts():
     parser.add_argument('-p', metavar='payload', type=str, help='URL encoded http POST data')
 
     args = parser.parse_args()
-    return {'url':args.u, 'timeout':args.t, 'content':args.c, 'auth':args.a, 'value':args.V, 'payload':args.p}
+    return {'url': args.u, 'timeout': args.t, 'content': args.c, 'auth': args.a, 'value': args.V, 'payload': args.p}
 
 def get_results(opts):
     """Get results with given parameters."""
@@ -49,62 +47,54 @@ def get_results(opts):
         url = "http://" + url
 
     start_timestamp = time.time()
-    if opts['timeout']:
+    if opts.get('timeout'):
         timeout = opts['timeout']
     else:
         timeout = 10
-
     try:
-        if opts['auth']:
+        if opts.get('auth'):
             from requests.auth import HTTPBasicAuth
-            username = opts['auth'].split(':')[0]
-            password = opts['auth'].split(':')[1]
+            username, password = opts['auth'].split(':')
             httpauth = HTTPBasicAuth(username, password)
-            if opts['payload']:
+            if opts.get('payload'):
                 payload = opts['payload']
-                req = requests.post(url, data=payload, auth=httpauth, timeout=opts['timeout'])
+                req = requests.post(url, data=payload, auth=httpauth, timeout=timeout)
             else:
-                req = requests.get(url, auth=httpauth, timeout=opts['timeout'])
+                req = requests.get(url, auth=httpauth, timeout=timeout)
         else:
-            if opts['payload']:
+            if opts.get('payload'):
                 payload = opts['payload']
-                req = requests.post(url, data=payload, timeout=opts['timeout'])
+                req = requests.post(url, data=payload, timeout=timeout)
             else:
-                req = requests.get(url, timeout=opts['timeout'])
+                req = requests.get(url, timeout=timeout)
 
         end_timestamp = time.time()
-        response_secs = round(end_timestamp - start_timestamp,3)
+        response_secs = round(end_timestamp - start_timestamp, 3)
 
-        if opts['value']:
-            if opts['content']:
-                print req.content
-            elif opts['timeout']:
-                print response_secs
+        if opts.get('value'):
+            if opts.get('content'):
+                print(req.content.decode('utf-8'))
+            elif opts.get('timeout'):
+                print(response_secs)
             else:
-                print req.status_code
+                print(req.status_code)
         else:
             if req.status_code == requests.codes.ok:
-                if opts['content']:
-                    if opts['content'] in req.content:
-                        print 0
+                if opts.get('content'):
+                    if opts['content'] in req.content.decode('utf-8'):
+                        print(0)
                     else:
-                        print 1
+                        print(1)
                 else:
-                    print 0
+                    print(0)
             else:
-                print 1
+                print(1)
 
     except requests.exceptions.Timeout:
-        if opts['value']:
-            print "Timeout"
-        else:
-            print 1
+        print("Timeout" if opts.get('value') else 1)
 
     except requests.exceptions.ConnectionError:
-        if opts['value']:
-            print "ConnectionError"
-        else:
-            print 1
+        print("ConnectionError" if opts.get('value') else 1)
 
     return True
 
