@@ -8,38 +8,38 @@ Examples:
     >>> from operations import local_cmd,remote_cmd,sftp_get,sftp_put
 
     >>> out = local_cmd('uname -r')
-    >>> print out
+    >>> print(out)
     2.6.32
-    >>> print out.stdout
+    >>> print(out.stdout)
     2.6.32
-    >>> print out.failed
+    >>> print(out.failed)
     False
-    >>> print out.succeeded
+    >>> print(out.succeeded)
     True
 
     >>> out = remote_cmd('hostname --fqdn',hostname='heylinux.com',username='jobs',
                      pkey='/path/to/rsa',port=8022)
-    >>> print out
+    >>> print(out)
     heylinux.com
-    >>> print out.failed
+    >>> print(out.failed)
     False
-    >>> print out.succeeded
+    >>> print(out.succeeded)
     True
 
     >>> out = sftp_get('/tmp/remote.txt','/tmp/local.txt',hostname='heylinux.com',username='jobs',
                   pkey='/path/to/dsa',pkey_type='dsa',port=8022)
-    >>> print out.failed
+    >>> print(out.failed)
     True
-    >>> print out.succeeded
+    >>> print(out.succeeded)
     False
-    >>> print out.stderr
+    >>> print(out.stderr)
     No such file or directory
 
     >>> out = sftp_put('/tmp/local.txt','/tmp/remote.txt',hostname='heylinux.com',username='jobs',
                   password='apple')
-    >>> print out.failed
+    >>> print(out.failed)
     False
-    >>> print out.succeeded
+    >>> print(out.succeeded)
     True
 '''
 
@@ -134,7 +134,7 @@ def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey
                 sftp.get(src_path, dest_path)
             if transfer_type == "put":
                 sftp.put(src_path, dest_path)
-        except Exception, e:
+        except Exception as e:
             out.failed = True
             out.stderr = e.args[1]
 
