@@ -1,14 +1,21 @@
 # macOS
 .DS_Store
 
-# VIM
+# Vim
 *.swp
 
-# Pyc
-*.pyc
+# Emacs/Vi
+*~
 
-# .vscode directory
-.vscode
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 
-# .idea directory
-.idea
+# IDE
+.vscode/
+.idea/
+.ipynb_checkpoints/
+
+# Cache
+chinese_holidays.json
