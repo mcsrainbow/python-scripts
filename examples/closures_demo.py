@@ -12,10 +12,9 @@ def test3(a, b):
 def test4(a):
     return 2*a
 
-
 def main():
-    print test1(1, 1)
-    print test3(1, 1)
+    print(test1(1, 1))
+    print(test3(1, 1))
 
 if __name__=='__main__':
     main()

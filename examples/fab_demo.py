@@ -13,11 +13,11 @@ class FabricSupport:
     def df(self):
         run("df -h")
 
-    def execute(self,task,hosts):
+    def execute(self, task, hosts):
         env.parallel = True
         env.pool_size = 3
 
         get_task = "task = self.%s" % task
-        exec get_task
+        exec(get_task)
 
-        execute(task,hosts=hosts)
+        execute(task, hosts=hosts)

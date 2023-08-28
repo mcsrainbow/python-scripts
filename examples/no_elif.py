@@ -10,14 +10,13 @@ class A(object):
                 }
 
     def _show_apple(self, person):
-        print '{0} eat apple'.format(person)
+        print('{0} eat apple'.format(person))
 
     def _show_lemon(self, person):
-        print '{0} eat lemon'.format(person)
+        print('{0} eat lemon'.format(person))
 
     def _show_mango(self, person):
-        print '{0} eat mango'.format(person)
-
+        print('{0} eat mango'.format(person))
 
     def eat1(self, person, fruit):
         if not self._funcs.has_key(fruit):
