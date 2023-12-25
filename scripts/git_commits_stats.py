@@ -25,7 +25,7 @@ def get_gitlab_projects(gl, search_list):
 
     return projects
 
-def process_gitlab_projects(projects, local_base_path, branch_list):
+def process_gitlab_projects(gitlab_url, projects, local_base_path, branch_list):
 
     stats_data = dict()
 
@@ -34,7 +34,9 @@ def process_gitlab_projects(projects, local_base_path, branch_list):
         if "-deleted-" not in git_url:
             print(f"INFO: Cloning Git Repo: {git_url}")
 
-            pattern = r"git@jihulab\.com:(.*)\.git"
+            gitlab_addr = gitlab_url.split("//")[-1]
+            escaped_addr = re.escape(gitlab_addr)
+            pattern = rf"git@{escaped_addr}:(.*)\.git"
             re_match = re.search(pattern, git_url)
             project_path = re_match.group(1) if re_match else None
 
@@ -133,7 +135,7 @@ def main():
     gl = gitlab.Gitlab(gitlab_url, private_token=private_token)
 
     projects = get_gitlab_projects(gl, search_list)
-    stats_data = process_gitlab_projects(projects, local_base_path, branch_list)
+    stats_data = process_gitlab_projects(gitlab_url, projects, local_base_path, branch_list)
 
     if os.path.exists(csv_file):
         os.remove(csv_file)
