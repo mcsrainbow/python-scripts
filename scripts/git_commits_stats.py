@@ -25,7 +25,7 @@ def get_gitlab_projects(gl, search_list):
 
     return projects
 
-def process_gitlab_projects(projects, local_base_path, exclude_keywords, branch_list):
+def process_gitlab_projects(projects, local_base_path, filter_mode, include_keywords, exclude_keywords, branch_list):
 
     stats_data = dict()
 
@@ -37,11 +37,15 @@ def process_gitlab_projects(projects, local_base_path, exclude_keywords, branch_
         project_path = re_match.group(1) if re_match else None
 
         skip_flag = False
-        for keyword in exclude_keywords:
-            if keyword in project_path:
-                print(f"INFO: Skipped because keyword: '{keyword}' was found in {project_path}")
-                skip_flag = True
-                break
+
+        if filter_mode == "include":
+            skip_flag = not any(keyword in project_path for keyword in include_keywords)
+            if skip_flag:
+                print(f"INFO: Skipped because none of the 'include' keywords was found in {project_path}")
+        elif filter_mode == "exclude":
+            skip_flag = any(keyword in project_path for keyword in exclude_keywords)
+            if skip_flag:
+                print(f"INFO: Skipped because at least one of 'exclude' keywords was found in {project_path}")
 
         if not skip_flag and "-deleted-" not in git_url:
             print(f"INFO: Cloning Git Repo: {git_url}")
@@ -128,9 +132,25 @@ def main():
         "PATH NAME/TO/GROUP"
     ]
 
+    filter_mode = "exclude"
+
+    include_keywords = [
+        "your_include_string"
+    ]
+
     exclude_keywords = [
         "your_exclude_string"
     ]
+
+    print(f"INFO: The filter_mode is: '{filter_mode}'")
+    if filter_mode == 'include':
+        print(f"INFO: The include_keywords:")
+        for keyword in include_keywords:
+            print(f"      {keyword}")
+    elif filter_mode == 'exclude':
+        print(f"INFO: The exclude_keywords:")
+        for keyword in exclude_keywords:
+            print(f"      {keyword}")
 
     branch_list = ['dev', 'develop', 'main', 'master']
 
@@ -149,7 +169,7 @@ def main():
     gl = gitlab.Gitlab(gitlab_url, private_token=private_token)
 
     projects = get_gitlab_projects(gl, search_list)
-    stats_data = process_gitlab_projects(projects, local_base_path, exclude_keywords, branch_list)
+    stats_data = process_gitlab_projects(projects, local_base_path, filter_mode, include_keywords, exclude_keywords, branch_list)
 
     if os.path.exists(csv_file):
         os.remove(csv_file)
