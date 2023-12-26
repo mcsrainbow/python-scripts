@@ -25,18 +25,26 @@ def get_gitlab_projects(gl, search_list):
 
     return projects
 
-def process_gitlab_projects(projects, local_base_path, branch_list):
+def process_gitlab_projects(projects, local_base_path, exclude_keywords, branch_list):
 
     stats_data = dict()
 
     for project in projects:
         git_url = project.ssh_url_to_repo
-        if "-deleted-" not in git_url:
-            print(f"INFO: Cloning Git Repo: {git_url}")
 
-            pattern = r":([^:]+)\.git"
-            re_match = re.search(pattern, git_url)
-            project_path = re_match.group(1) if re_match else None
+        pattern = r":([^:]+)\.git"
+        re_match = re.search(pattern, git_url)
+        project_path = re_match.group(1) if re_match else None
+
+        skip_flag = False
+        for keyword in exclude_keywords:
+            if keyword in project_path:
+                print(f"INFO: Skipped because keyword: '{keyword}' was found in {project_path}")
+                skip_flag = True
+                break
+
+        if not skip_flag and "-deleted-" not in git_url:
+            print(f"INFO: Cloning Git Repo: {git_url}")
 
             local_path = f"{local_base_path}/{project_path}"
             print(f"INFO: Local Path: {local_path}")
@@ -44,15 +52,18 @@ def process_gitlab_projects(projects, local_base_path, branch_list):
             repo = None
             if os.path.exists(local_path) and os.path.isdir(local_path):
                 repo = Repo(local_path)
-                repo.remotes.origin.fetch()
-                repo.remotes.origin.pull()
+                try:
+                    repo.remotes.origin.fetch()
+                except Exception:
+                    print(f"ERROR: Failed to fetch codes from {git_url}")
+                    continue
             else:
-                repo = Repo.clone_from(project.ssh_url_to_repo, local_path)
+                repo = Repo.clone_from(git_url, local_path)
 
-            repo.remotes.origin.fetch()
+            remote_refs = repo.remote().refs
 
             for branch_name in branch_list:
-                if branch_name in repo.branches:
+                if branch_name in remote_refs:
                     try:
                         repo.git.checkout(branch_name)
                     except Exception:
@@ -116,6 +127,11 @@ def main():
     search_list = [
         "PATH NAME/TO/GROUP"
     ]
+
+    exclude_keywords = [
+        "your_exclude_string"
+    ]
+
     branch_list = ['dev', 'develop', 'main', 'master']
 
     csv_file = f'{local_base_path}/repos_stats.csv'
@@ -133,7 +149,7 @@ def main():
     gl = gitlab.Gitlab(gitlab_url, private_token=private_token)
 
     projects = get_gitlab_projects(gl, search_list)
-    stats_data = process_gitlab_projects(projects, local_base_path, branch_list)
+    stats_data = process_gitlab_projects(projects, local_base_path, exclude_keywords, branch_list)
 
     if os.path.exists(csv_file):
         os.remove(csv_file)
