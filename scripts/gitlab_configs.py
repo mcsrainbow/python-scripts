@@ -23,7 +23,7 @@ def get_gitlab_groups_n_projects(gl, search_list):
     return {'groups':groups,'projects':projects}
 
 # https://python-gitlab.readthedocs.io/en/stable/gl_objects/variables.html
-def check_gitlab_groups(gl, groups, keywords, old_token, new_token):
+def check_gitlab_groups(gl, groups, keywords, old_value, new_value):
 
     for group in groups:
         try:
@@ -36,8 +36,8 @@ def check_gitlab_groups(gl, groups, keywords, old_token, new_token):
                 for variable in variables:
                     if any(kw in variable.key for kw in keywords):
                         print(f"    Key: {variable.key}, Value: {variable.value}")
-                        if variable.value == old_token:
-                            variable.value = new_token
+                        if variable.value == old_value:
+                            variable.value = new_value
                             variable.save()
                             print(f"    Updated {variable.key} to new token.")
                     else:
@@ -49,7 +49,7 @@ def check_gitlab_groups(gl, groups, keywords, old_token, new_token):
     return True
 
 # https://python-gitlab.readthedocs.io/en/stable/gl_objects/variables.html
-def check_gitlab_projects(gl, projects, keywords, old_token, new_token):
+def check_gitlab_projects(gl, projects, keywords, old_value, new_value):
 
     for project in projects:
         project_path = project.path_with_namespace
@@ -64,8 +64,8 @@ def check_gitlab_projects(gl, projects, keywords, old_token, new_token):
                     for variable in variables:
                         if any(kw in variable.key for kw in keywords):
                             print(f"    Key: {variable.key}, Value: {variable.value}")
-                            if variable.value == old_token:
-                                variable.value = new_token
+                            if variable.value == old_value:
+                                variable.value = new_value
                                 variable.save()
                                 print(f"    Updated {variable.key} to new token.")
                         else:
@@ -80,15 +80,15 @@ def main():
     gitlab_url = 'https://jihulab.com'
     private_token = 'YourAPIToken'
 
-    old_token='YourOLDToken'
-    new_token='YourNEWToken'
+    old_value='YourOLDValue'
+    new_value='YourNEWValue'
 
     search_list = [
         "PATH NAME/TO/GROUP"
     ]
 
     keywords = [
-        "TOKEN"
+        "DUMMY"
     ]
 
     gl = gitlab.Gitlab(gitlab_url, private_token=private_token)
@@ -97,9 +97,9 @@ def main():
     groups = groups_n_projects['groups']
     projects = groups_n_projects['projects']
 
-    check_gitlab_groups(gl, groups, keywords, old_token, new_token)
+    check_gitlab_groups(gl, groups, keywords, old_value, new_value)
 
-    check_gitlab_projects(gl, projects, keywords, old_token, new_token)
+    check_gitlab_projects(gl, projects, keywords, old_value, new_value)
 
 if __name__ == "__main__":
     main()
