@@ -6,6 +6,7 @@ import gitlab
 
 def get_gitlab_groups_n_projects(gl, search_list):
     projects = []
+
     for search_item in search_list:
         print(f"INFO: Searching GitLab Groups and Projects in: {search_item}...")
         groups = gl.groups.list(search=search_item, all_available=True, get_all=True)
@@ -21,7 +22,8 @@ def get_gitlab_groups_n_projects(gl, search_list):
 
     return {'groups':groups,'projects':projects}
 
-def check_gitlab_groups(gl, groups, keywords):
+# https://python-gitlab.readthedocs.io/en/stable/gl_objects/variables.html
+def check_gitlab_groups(gl, groups, keywords, old_token, new_token):
 
     for group in groups:
         try:
@@ -32,8 +34,12 @@ def check_gitlab_groups(gl, groups, keywords):
             if len(variables) > 0:
                 print(f"INFO: CI/CD Variables in GitLab Group: {group_info.full_path}")
                 for variable in variables:
-                    if any(i in variable.key for i in keywords):
+                    if any(kw in variable.key for kw in keywords):
                         print(f"    Key: {variable.key}, Value: {variable.value}")
+                        if variable.value == old_token:
+                            variable.value = new_token
+                            variable.save()
+                            print(f"    Updated {variable.key} to new token.")
                     else:
                         print(f"    Key: {variable.key}")
 
@@ -42,7 +48,8 @@ def check_gitlab_groups(gl, groups, keywords):
 
     return True
 
-def check_gitlab_projects(gl, projects, keywords):
+# https://python-gitlab.readthedocs.io/en/stable/gl_objects/variables.html
+def check_gitlab_projects(gl, projects, keywords, old_token, new_token):
 
     for project in projects:
         project_path = project.path_with_namespace
@@ -55,8 +62,12 @@ def check_gitlab_projects(gl, projects, keywords):
                 if len(variables) > 0:
                     print(f"INFO: CI/CD Variables in GitLab Repo: {project_path}")
                     for variable in variables:
-                        if any(i in variable.key for i in keywords):
+                        if any(kw in variable.key for kw in keywords):
                             print(f"    Key: {variable.key}, Value: {variable.value}")
+                            if variable.value == old_token:
+                                variable.value = new_token
+                                variable.save()
+                                print(f"    Updated {variable.key} to new token.")
                         else:
                             print(f"    Key: {variable.key}")
 
@@ -67,14 +78,17 @@ def check_gitlab_projects(gl, projects, keywords):
 
 def main():
     gitlab_url = 'https://jihulab.com'
-    private_token = 'your_private_token'
+    private_token = 'YourAPIToken'
+
+    old_token='YourOLDToken'
+    new_token='YourNEWToken'
 
     search_list = [
         "PATH NAME/TO/GROUP"
     ]
 
     keywords = [
-        "DUMMY"
+        "TOKEN"
     ]
 
     gl = gitlab.Gitlab(gitlab_url, private_token=private_token)
@@ -83,9 +97,9 @@ def main():
     groups = groups_n_projects['groups']
     projects = groups_n_projects['projects']
 
-    check_gitlab_groups(gl, groups, keywords)
+    check_gitlab_groups(gl, groups, keywords, old_token, new_token)
 
-    check_gitlab_projects(gl, projects, keywords)
+    check_gitlab_projects(gl, projects, keywords, old_token, new_token)
 
 if __name__ == "__main__":
     main()
