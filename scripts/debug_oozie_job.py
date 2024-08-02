@@ -5,15 +5,14 @@
 # Author: Dong Guo
 # Last modified: 2016-09-23
 
-import os
 import sys
 
 def parse_opts():
     """Help messages(-h, --help)."""
-    
+
     import textwrap
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
@@ -24,10 +23,15 @@ def parse_opts():
           {0} --server idc1-hive1 --job_id 0021221-141009012304672-oozie-oozi-C@7296 --active_rm idc1-rm2
         '''.format(__file__)
         ))
-    
+
     parser.add_argument('--server', type=str, required=True, help='the oozie server address')
     parser.add_argument('--job_id', type=str, required=True, help='the oozie job id')
     parser.add_argument('--active_rm', type=str, help='the active resourcemanager server address')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
 
     return {'server':args.server, 'job_id':args.job_id, 'active_rm':args.active_rm}
@@ -46,7 +50,7 @@ def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", p
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         import paramiko
-    
+
     p = paramiko.SSHClient()
     p.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -98,7 +102,7 @@ def get_ports(hostname,nm_port):
     return False
 
 def oozie_debug(server,job_id,active_rm):
-    
+
     import requests
     import json
 
@@ -114,14 +118,14 @@ def oozie_debug(server,job_id,active_rm):
         print "externalId: {0}".format(w_job_id)
         if not w_job_id:
             return False
-   
+
     elif "oozie-oozi-W" in job_id:
         w_job_id = job_id
 
     else:
         print "ERROR: Please verify the 'job_id'"
         return False
-   
+
     w_req = requests.get('http://{0}:11000/oozie/v1/job/{1}'.format(server,w_job_id))
     w_req_dict = w_req.json()
     job_user = w_req_dict['user']
@@ -180,10 +184,6 @@ def oozie_debug(server,job_id,active_rm):
     return True
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + ' -h')
-        return 2
-    
     opts = parse_opts()
     print '##################################'
     oozie_debug(opts['server'],opts['job_id'],opts['active_rm'])

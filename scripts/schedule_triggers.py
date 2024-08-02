@@ -39,11 +39,15 @@ def parse_opts():
     exclusion.add_argument('-d', action="store_true", help='disable the notification for trigger')
     exclusion.add_argument('-s', action="store_true", help='schedule a downtime for trigger')
     exclusion.add_argument('-v', action="store_true", help='view the yaml data')
-    
+
     parser.add_argument('-H', metavar='host', type=str, help='regex name of the host')
     parser.add_argument('-T', metavar='trigger', type=str, help='part of the trigger name')
     parser.add_argument('--hours', type=int, help='downtime hours for the trigger')
     parser.add_argument('--delete', action="store_true", default=False, help='delete the trigger')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'disable':args.d, 'schedule':args.s, 'display':args.v, 'host':args.H, 'trigger':args.T,
@@ -143,10 +147,6 @@ def display_yamldata(opts):
     return True
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        return 2
-
     if not os.path.isfile(YAML_DATA) or os.stat(YAML_DATA).st_size == 0:
         with open(YAML_DATA, "w") as f:
             f.write("notifications: {}")

@@ -5,12 +5,11 @@
 #
 # Reports:
 # 1. number of incidents per day (total, breakdown by host, breakdown by service)
-# 2. for each incident, time between first notification to ack, number of notifications, 
+# 2. for each incident, time between first notification to ack, number of notifications,
 # number of ack, number of escalation, if resolved by API
 
 import json
 import datetime
-import os
 import sys
 import time
 import re
@@ -47,6 +46,10 @@ def parse_opts():
     exclusion.add_argument('-d', metavar='days', type=int, help='only summary info of the number of days')
     exclusion.add_argument('-s', metavar='date', type=str, help='detailed info of the specified date')
 
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
     return {'days':args.d, 'date':args.s}
 
@@ -56,7 +59,7 @@ def prettify(object):
 
 def get_incidents(start_date,end_date):
     '''Get incidents'''
-    res_url = api_url + "incidents"  
+    res_url = api_url + "incidents"
     req = requests.get(res_url, headers=headers, stream=True,
                        params={'since':start_date,'until':end_date})
     return req.json()
@@ -100,7 +103,7 @@ def get_log_entries_by_incident(incid):
     else:
         time_bet_1stalert_and_1stack = datetime.strptime(first_ack_time, tf) - datetime.strptime(first_notification_time, tf)
         time_bet_1stalert_and_1stack = "{0}m{1}s".format(str(time_bet_1stalert_and_1stack).split(":")[1],str(time_bet_1stalert_and_1stack).split(":")[2])
-    
+
     return {'time_bet': time_bet_1stalert_and_1stack, 'num_noti': str(od_number_of_notifications), 'num_acks': str(od_number_of_acks), 'res_method': res_method}
 
 def get_reports(date,days,opts):
@@ -117,7 +120,7 @@ def get_reports(date,days,opts):
     for incident in info['incidents']:
         escanum = incident['number_of_escalations']
         incid = incident['id']
-        
+
         if incident['trigger_type'] == "email_trigger":
             inchost = "byEmail"
             byemail += 1
@@ -151,9 +154,6 @@ def get_reports(date,days,opts):
     return {'date':start_date,'total':info['total'],'byservice':byservice,'byhost':byhost,'byemail':byemail,'details':details, 'rbynagios':rbynagios, 'rbytimeout':rbytimeout, 'rbyhuman':rbyhuman }
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(1)
     opts = parse_opts()
     daterex = "^[0-9]{4}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30)))$"
 

@@ -40,6 +40,11 @@ def parse_opts():
     parser.add_argument('-i', metavar='inventory', type=str, required=True, help='the inventory hosts file')
     parser.add_argument('--tags', metavar='tag', type=str, help='the tag name')
     parser.add_argument('--limit', metavar='subset', type=str, help='the subset host or group')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
 
     return {'playbook':args.playbook, 'inventory_file':args.i, 'tags':args.tags, 'subset':args.limit}
@@ -131,16 +136,12 @@ class Runner(object):
 
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + ' -h')
-        return 2
-
     # locate ansible workhome
     os.chdir(WORKHOME)
 
     # get parameters
     opts = parse_opts()
-    
+
     # run ansible playbook
     runner = Runner(
         playbook=opts['playbook'],

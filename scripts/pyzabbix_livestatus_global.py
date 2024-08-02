@@ -4,7 +4,6 @@
 # Author: Dong Guo
 # Last modified: 12/14/2016
 
-import os
 import sys
 import re
 from pyzabbix import ZabbixAPI, ZabbixAPIException
@@ -29,8 +28,13 @@ def parse_opts():
           ...
         '''.format(__file__)
         ))
-    
+
     parser.add_argument('--trigger',type=str,required=True,help='part of trigger name or full trigger name')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
 
     return {'trigger':args.trigger}
@@ -38,7 +42,7 @@ def parse_opts():
 def check_cluster(trigger):
     zapi = ZabbixAPI(zabbix_site)
     zapi.login(zabbix_user,zabbix_pass)
-    
+
     trigger_notok = zapi.trigger.get(monitored=1,selectHosts=1,
                                      output=['hosts'],withLastEventUnacknowledged=1,
                                      search={'description':trigger},filter={"value":1})
@@ -65,9 +69,6 @@ def check_cluster(trigger):
     return True
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(1)
     opts = parse_opts()
 
     check_cluster(opts['trigger'])

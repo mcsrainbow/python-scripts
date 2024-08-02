@@ -4,7 +4,6 @@
 # Author: Dong Guo
 # Last Modified: 2013/12/9
 
-import os
 import sys
 import fileinput
 
@@ -17,7 +16,7 @@ except ImportError:
 
 def parse_opts():
     """Help messages (-h, --help)"""
-    
+
     import textwrap
     import argparse
 
@@ -49,8 +48,12 @@ def parse_opts():
     parser.add_argument('-m', metavar='memory', type=str, help='memory size of vm')
     parser.add_argument('-d', metavar='disk', type=str, help='disk size of vm')
 
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
-    return {'server':args.s, 'filename':args.f, 'template':args.t, 'hostname':args.n, 'ipaddr':args.i, 
+    return {'server':args.s, 'filename':args.f, 'template':args.t, 'hostname':args.n, 'ipaddr':args.i,
             'netmask':args.e, 'gateway':args.g, 'cpu':args.c, 'memory':args.m, 'disk':args.d}
 
 def isup(host):
@@ -72,13 +75,13 @@ def fab_execute(host,task):
 
     user = "heydevops"
     keyfile = "/home/heydevops/.ssh/id_rsa"
-    
+
     myfab = FabricSupport()
     return myfab.execute(host,task,user,keyfile)
 
 class FabricSupport(object):
     """Remotely get information about servers"""
-    
+
     def __init__(self):
         self.server = opts['server']
         self.template = opts['template']
@@ -97,7 +100,7 @@ class FabricSupport(object):
 
         get_task = "task = self.{0}".format(task)
         exec get_task
-        
+
         with settings(warn_only=True):
             return execute(task,host=host)[host]
 
@@ -120,7 +123,7 @@ class FabricSupport(object):
         if vm_uuid.failed:
             print "Failed to copy vm:{0}".format(self.hostname)
             return False
-        
+
         print "Setting up the bootloader,vcpus,memory of vm:{0}...".format(self.hostname)
         sudo('''xe vm-param-set uuid={0} HVM-boot-policy=""'''.format(vm_uuid))
         sudo('''xe vm-param-set uuid={0} PV-bootloader="pygrub"'''.format(vm_uuid))
@@ -145,9 +148,6 @@ class FabricSupport(object):
         return True
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(1)
     opts = parse_opts()
 
     # check if host is up
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     if opts['filename']:
         for i in fileinput.input(opts['filename']):
             a = i.split(',')
-            opts = {'server':opts['server'], 'template':a[0], 'hostname':a[1], 'ipaddr':a[2], 
+            opts = {'server':opts['server'], 'template':a[0], 'hostname':a[1], 'ipaddr':a[2],
                     'netmask':a[3], 'gateway':a[4], 'cpu':a[5], 'memory':a[6], 'disk':a[7]}
             fab_execute(opts['server'],"clone")
         sys.exit(0)

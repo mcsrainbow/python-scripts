@@ -4,7 +4,6 @@
 # Author: Dong Guo
 # Last Modified: 2015/04/30
 
-import os
 import sys
 from decimal import Decimal
 import requests
@@ -80,6 +79,10 @@ def parse_opts():
     exclusion_2.add_argument('-u', action="store_true", default=False,help='set Type as PDU')
     parser.add_argument('-s', metavar='rackspace', type=str, help='rackspace informations')
     parser.add_argument('-p', metavar='rackposition', type=str, choices=['left','right','front','interior','back'], help='rackspace detailed position')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'hostname':args.hostname, 'read':args.r, 'delete':args.d,
@@ -174,7 +177,7 @@ def isup(host):
 
 class GetServerInfo(object):
     """Remotely get informations"""
-    
+
     def __init__(self):
         pass
 
@@ -182,49 +185,49 @@ class GetServerInfo(object):
         xapi_sign = run('rpm -q --quiet xapi-xe')
         if xapi_sign.succeeded:
             return "XenServer"
-         
+
         ec2_sign = run("""curl http://169.254.169.254/latest/meta-data/hostname --connect-timeout 1 |egrep -wq 'ec2.internal|compute.internal'""")
         if ec2_sign.succeeded:
             return "EC2"
-    
+
         xen_sign = run('ps -e | egrep -wq "xenbus|xenwatch"')
         if xen_sign.succeeded:
             return "VM"
-        
+
         return "Server"
-        
+
     def get_fqdn(self):
         hostname = run('hostname |cut -d. -f1')
         fqdn = run('hostname -f')
         if fqdn.failed:
             fqdn = hostname
         return fqdn
-    
+
     def get_os_release(self):
         os_release = run('cat /etc/*-release |head -n 1 |cut -d= -f2 |sed s/\\"//g')
-    
+
         os_mode = run('uname -m')
         return os_release + ", " + os_mode
-    
+
     def get_memory(self):
         output = run("""grep -w "MemTotal" /proc/meminfo |awk '{print $2}'""")
         t_mem_g = Decimal(output) / 1024 / 1024
         return round(t_mem_g,2)
-    
+
     def get_swap(self):
         output = run("""grep -w "SwapTotal" /proc/meminfo |awk '{print $2}'""")
         t_swap_g = Decimal(output) / 1024 /1024
         return round(t_swap_g,2)
-    
+
     def get_cpu(self):
         cpu_type = run("""grep 'model name' /proc/cpuinfo |uniq |awk -F : '{print $2}' |sed 's/^[ \t]*//g' |sed 's/ \+/ /g'""")
         cpu_cores = run("""grep 'processor' /proc/cpuinfo |sort |uniq |wc -l""")
         return {'cpu_cores':cpu_cores, 'cpu_type':cpu_type}
-    
+
     def get_disk(self):
         disk = sudo("""fdisk -l 2>/dev/null |grep -v "/dev/mapper" |grep "Disk /dev" |awk '{print $2" "$3" "$4}'|grep -Ev '^$|^doesn' |sort |xargs""")
         return disk
-    
+
     def get_network(self):
         output = run("""/sbin/ifconfig |grep "Link encap" |awk '{print $1}' |grep -wv 'lo' |xargs""")
         nics = output.split()
@@ -234,12 +237,12 @@ class GetServerInfo(object):
             if ipaddr:
                 t_nic_info = t_nic_info + i + ":" + ipaddr + ", "
         return t_nic_info
-    
+
     def get_vm_list(self):
         output = sudo("""xl list-vm |awk '{print $3}' |grep -vw name |sort -n |xargs""")
         vm_list = ','.join(output.split())
         return vm_list
-    
+
     def get_rst_on(self):
         colo_prefix = run("""hostname -s |egrep 'idc1-|idc2-' |cut -d- -f1""")
         xs_pool_master = colo_prefix + '-vm1001'
@@ -256,12 +259,12 @@ class GetServerInfo(object):
         t_mem_m = sudo('xl info |grep total_memory |cut -d : -f 2')
         t_mem_g = int(t_mem_m) / 1024
         return t_mem_g
-    
+
     def get_xs_cpu(self):
         cpu_cores = sudo("""xe host-cpu-info |grep -w cpu_count |awk -F ': ' '{print $2}'""")
         cpu_type = run("""grep 'model name' /proc/cpuinfo |uniq |awk -F : '{print $2}' |sed 's/^[ \t]*//g' |sed 's/ \+/ /g'""")
         return {'cpu_cores':cpu_cores, 'cpu_type':cpu_type}
-    
+
     def get_ec2_pubname(self):
         ec2_pubname = run("""curl http://169.254.169.254/latest/meta-data/public-hostname --connect-timeout 1""")
         return ec2_pubname
@@ -309,13 +312,13 @@ def sum_info():
     xs_name = ""
     if server_type == "VM":
         xs_name = server_info.get_rst_on()
-        print "RESIDENT-ON: " + xs_name 
+        print "RESIDENT-ON: " + xs_name
 
     ec2_pubname = ""
     if server_type == "EC2":
         ec2_pubname = server_info.get_ec2_pubname()
         print "PUBNAME:     " + ec2_pubname
-    
+
     return {'server_type':server_type, 'fqdn':fqdn, 'hostname':opts['hostname'],'os_release':os_release,
             'memory':memory,'swap':swap, 'cpu_cores':cpu_info['cpu_cores'], 'cpu_type':cpu_info['cpu_type'],
             'disk':disk,'network':network, 'vm_list':vm_list, 'resident_on':xs_name, 'ec2_pubname':ec2_pubname}
@@ -333,7 +336,7 @@ def read_db(info):
     if not object_id:
         print "Object:{0} does not exist".format(info['hostname'])
         return False
-    
+
     # get the location info
     rack_id_list = []
     unit_no_list = []
@@ -372,10 +375,10 @@ def update_db(info):
     # get object_type_id
     for item in db.query("select * from Dictionary where dict_value='{0}'".format(info['server_type'])):
         object_type_id = item.dict_key
-    
+
     # delete object if already exists
-    delete_object(info)   
- 
+    delete_object(info)
+
     # create object
     url = """http://{0}/racktables/index.php?module=redirect&page=depot&tab=addmore&op=addObjects""".format(rt_server)
     if info['server_type'] in ["Server","XenServer"]:
@@ -435,7 +438,7 @@ def update_db(info):
 &2_attr_id=10004&2_value={4}&3_attr_id=3&3_value={5}&4_attr_id=26&4_value=0&5_attr_id=10006&5_value={6}&6_attr_id=10003&6_value={7}\
 &7_attr_id=10007&7_value={8}&8_attr_id=4&8_value={9}&9_attr_id=24&9_value=&10_attr_id=10005&10_value={10}&num_attrs=11&object_comment=&submit.x=25&submit.y=14'"""\
                   .format(object_id,object_type_id,info['hostname'],info['cpu_cores'],quote_plus(info['disk']),info['fqdn'],
-                          info['memory'],quote_plus(info['network']),info['resident_on'],os_release_key,info['swap']) 
+                          info['memory'],quote_plus(info['network']),info['resident_on'],os_release_key,info['swap'])
 
     req = requests.post(url, data=payload, headers=rt_headers, auth=rt_auth)
     if req.status_code != requests.codes.ok:
@@ -539,7 +542,7 @@ def update_rack(info,object_id):
         atom = "".join(rs_info[3:4])
         if not atom:
             print "The rackspace is not correct"
-            return False 
+            return False
 
         # get rack_id
         for item in db.query("select * from Rack where name = '{0}' and location_name = '{1}' and row_name = '{2}'".format(rack,colo,row)):
@@ -547,7 +550,7 @@ def update_rack(info,object_id):
         if not rack_id:
             print "Failed to get rack_id"
             return False
-        
+
         atom_list = atom.split(',')
         atom_data  = []
         for i in atom_list:
@@ -560,7 +563,7 @@ def update_rack(info,object_id):
                    atom_data.append("&atom_{0}_{1}_1=on".format(rack_id,i))
            else:
                atom_data.append("&atom_{0}_{1}_0=on&atom_{0}_{1}_1=on&atom_{0}_{1}_2=on".format(rack_id,i))
-        atom_url = "".join(atom_data) 
+        atom_url = "".join(atom_data)
 
         url = """http://{0}/racktables/index.php?module=redirect&page=object&tab=rackspace&op=updateObjectAllocation""".format(rt_server)
         payload = """object_id={0}&rackmulti%5B%5D={1}&comment=&got_atoms=Save{2}"""\
@@ -570,7 +573,7 @@ def update_rack(info,object_id):
             print "Failed to update rackspace"
             return False
         print "OK - Updated rackspace"
-           
+
     # close db
     db.close()
 
@@ -601,7 +604,7 @@ def delete_object(info):
 
     # close db
     db.close()
-    
+
     return True
 
 def list_object(info):
@@ -645,28 +648,24 @@ def list_object(info):
 
     # close db
     db.close()
-    
+
     return True
 
 if __name__ == '__main__':
-    # show help messages if no parameter
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(1)
     opts = parse_opts()
 
     if not opts['list'] and not opts['delete'] and not opts['blank'] and not opts['switch'] and not opts['security'] \
        and not opts['pdu'] and not opts['offline']:
         # check if host is up
         hostup = isup(opts['hostname'])
-        
-        if hostup: 
+
+        if hostup:
             # get info
             print "========================================"
             print "Getting informations from '{0}'...".format(opts['hostname'])
             print "========================================"
             info = sum_info()
- 
+
             # update racktables
             if opts['write']:
                 if info['server_type'] in ["Server","XenServer"]:
@@ -675,7 +674,7 @@ if __name__ == '__main__':
                     print "========================================"
                 read_db(info)
                 print "========================================"
-                print "Updating racktables..." 
+                print "Updating racktables..."
                 print "========================================"
                 update_db(info)
         else:
@@ -685,7 +684,7 @@ if __name__ == '__main__':
         if opts['blank'] or opts['switch'] or opts['security'] or opts['offline'] or opts['pdu']:
             if opts['write']:
                 print "========================================"
-                print "Updating racktables..." 
+                print "Updating racktables..."
                 print "========================================"
                 update_blank_switch_security_pdu_offline(info)
         if opts['list']:
@@ -697,7 +696,7 @@ if __name__ == '__main__':
     # read racktables
     if opts['read'] or opts['delete']:
         print "========================================"
-        print "Getting informations from DB..." 
+        print "Getting informations from DB..."
         print "========================================"
         read_db(info)
 

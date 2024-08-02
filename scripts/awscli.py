@@ -4,7 +4,6 @@
 # Author: Dong Guo
 # Last Modified: 2014/12/26
 
-import os
 import sys
 import json
 import time
@@ -101,6 +100,10 @@ def parse_opts():
                         action="store_true",
                         default=False,
                         help='no wait on termination')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'create': args.create,
@@ -307,9 +310,6 @@ def terminate_instance(region, instance_name, instance_id, quick):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(1)
     opts = parse_opts()
     if opts['create']:
         create_instance(

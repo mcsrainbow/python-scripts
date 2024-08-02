@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-#-*- coding:utf-8 -*-
-
 # Description: HTTP requests check for Zabbix
 # Author: Dong Guo
 
-import os
 import sys
 import requests
 import time
@@ -30,14 +26,24 @@ def parse_opts():
         '''.format(__file__)
         ))
 
-    parser.add_argument('-u', metavar='url', type=str, required=True, help='URL to GET or POST [default: / with http://]')
+    parser.add_argument('-u', metavar='url', type=str, required=True, help='URL to GET or POST [default: http://]')
     parser.add_argument('-t', metavar='timeout', type=float, help='seconds before connection times out [default: 10]')
     parser.add_argument('-c', metavar='content', type=str, help='string to expect in the content')
     parser.add_argument('-a', metavar='auth', type=str, help='username:password on sites with basic authentication')
     parser.add_argument('-V', action="store_true", default=False, help='return actual value instead of 0 and 1')
     parser.add_argument('-p', metavar='payload', type=str, help='URL encoded http POST data')
 
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
+
+    if args.a:
+        if ':' not in args.a or len(args.a.split(':')) != 2:
+            print("Invalid auth format. Expected username:password")
+            sys.exit(2)
+
     return {'url': args.u, 'timeout': args.t, 'content': args.c, 'auth': args.a, 'value': args.V, 'payload': args.p}
 
 def get_results(opts):
@@ -97,17 +103,15 @@ def get_results(opts):
     except requests.exceptions.ConnectionError:
         print("ConnectionError" if opts.get('value') else 1)
 
-    return True
-
-def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}" if opts.get('value') else 1)
         return 2
 
-    opts = parse_opts()
-    get_results(opts)
-
     return 0
+
+def main():
+    opts = parse_opts()
+    return get_results(opts)
 
 if __name__ == '__main__':
     sys.exit(main())

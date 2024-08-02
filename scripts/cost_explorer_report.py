@@ -28,6 +28,10 @@ def parse_opts():
     parser.add_argument('-k', metavar='tag_key', type=str, required=True, help='The tag key of cost_allocation_tag')
     parser.add_argument('-m', metavar='month', type=str, help='month [default: last month]')
 
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
     return({'tag_key':args.k, 'month':args.m})
 
@@ -101,7 +105,7 @@ def get_results(opts):
         last_month = date_first - datetime.timedelta(days=1)
         last_month_y = last_month.strftime("%Y")
         last_month_m = last_month.strftime("%m")
-       
+
     last_month_start_date = "{0}-{1}-01".format(last_month_y,last_month_m)
     last_month_str = "{0}-{1}".format(last_month_y,last_month_m)
 
@@ -196,16 +200,12 @@ def s3_copy(profile_name,costs_csv,s3_bucket_dir,last_month_str):
         return(True)
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        return(2)
-
     opts = parse_opts()
 
     costs_csv_dir = "{0}/costs_csv".format(os.path.abspath(os.path.dirname(sys.argv[0])))
     if not os.path.isdir(costs_csv_dir):
         os.mkdir(costs_csv_dir)
-        
+
     costs_results = get_results(opts)
     costs_csv = csv_save(costs_csv_dir,costs_results)
 

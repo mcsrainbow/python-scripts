@@ -4,7 +4,6 @@
 # Description: Clean Zabbix unreachable hosts
 # Author: Damon Guo
 
-import os
 import sys
 import requests
 import json
@@ -32,6 +31,10 @@ def parse_opts():
     parser.add_argument('-u', metavar='url', type=str, required=True, help='Zabbix URL')
     parser.add_argument('-a', metavar='auth', type=str, required=True, help='username:password for authentication token')
     parser.add_argument('-g', metavar='hostgroup', type=str, required=True, help='hostgroup1,hostgroup2,...')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'url':args.u, 'auth':args.a, 'hostgroup':args.g}
@@ -158,10 +161,6 @@ def cleanup(opts):
     return True
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        return 2
-
     opts = parse_opts()
     cleanup(opts)
 

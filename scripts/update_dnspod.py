@@ -4,7 +4,6 @@
 # Author: Damon Guo
 # Last Modified: 2019/08/30
 
-import os
 import sys
 import subprocess
 

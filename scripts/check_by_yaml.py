@@ -3,9 +3,6 @@
 # Author: Dong Guo
 # Last Modified: 2014/4/29
 
-# import os moudule to execute local commands
-import os
-
 # import sys module to return correct exit states to nagios
 import sys
 
@@ -52,6 +49,10 @@ def parse_opts():
     parser.add_argument('-c', metavar='crit', type=int, required=True, help='threshold of critical')
     parser.add_argument('-p', metavar='regex', type=str, help='regular expression pattern')
 
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
     return {'file':args.f, 'key':args.k, 'warn':args.w, 'crit':args.c, 'regex':args.p}
 
@@ -81,7 +82,7 @@ def get_value(opts):
 
 def check_value(value):
     """Check value with threshold settings"""
-    
+
     # import regex module to check the value with given pattern
     import re
 
@@ -103,14 +104,9 @@ def check_value(value):
         sys.exit(STATE_OK)
 
 if __name__ == '__main__':
-    # check arguments
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(STATE_UNKNOWN)
-
     # get arguments
     opts = parse_opts()
-    
+
     # get the value
     value = get_value(opts)
 

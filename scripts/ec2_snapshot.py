@@ -4,7 +4,6 @@
 # Author: Dong Guo
 # Last Modified: 2015/07/14
 
-import os
 import sys
 import json
 import time
@@ -43,6 +42,10 @@ def parse_opts():
     parser.add_argument('--volume_device', type=str, required=True)
     parser.add_argument('--retention_type', type=str, choices=['day','hour','minute'], required=True)
     parser.add_argument('--retention_count', type=int, required=True)
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'region':args.region, 'instance_name':args.instance_name, 'volume_device':args.volume_device,
@@ -84,7 +87,7 @@ def update_snapshot(region,instance_name,volume_device,retention_type,retention_
                 latest_snapshot_name = "{0}_{1}_{2}".format(opts['instance_name'],volume_device_short,datetime.now().strftime("%Y%m%d%H%M%S"))
                 conn.create_tags(latest_snapshot.id,{"Name":latest_snapshot_name})
                 print '''Created snapshot: "{0}"'''.format(latest_snapshot_name)
-                
+
                 snapshots = instance_volume.snapshots()
                 for snapshot in snapshots:
                     if 'Name' in snapshot.tags.keys():
@@ -99,10 +102,6 @@ def update_snapshot(region,instance_name,volume_device,retention_type,retention_
     return True
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(1)
-
     opts = parse_opts()
     if "/dev/" not in opts['volume_device']:
         print '''The volume_device should start with "/dev/".'''

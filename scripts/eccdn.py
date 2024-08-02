@@ -5,7 +5,6 @@
 # Author: Dong Guo
 # Last modified: 2015-03-11 02:23 UTC
 
-import os
 import sys
 import re
 import requests
@@ -39,6 +38,10 @@ def parse_opts():
     exclusion.add_argument('-d', metavar='days', type=int, help='the number of days')
     exclusion.add_argument('-s', metavar='date', type=str, help='the specified date')
     exclusion.add_argument('-r', metavar='range', type=str, help='the specified date range')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'days':args.d, 'date':args.s, 'range':args.r}
@@ -132,10 +135,6 @@ def print_reports(reports):
     return True
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        return 2
-
     opts = parse_opts()
     daterex = "^[0-9]{4}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30)))$"
 

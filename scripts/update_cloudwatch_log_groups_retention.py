@@ -4,7 +4,6 @@
 # Description: Update CloudWatch Log Groups Retention
 # Author: Damon Guo
 
-import os
 import sys
 import boto3
 
@@ -26,6 +25,10 @@ def parse_opts():
 
     parser.add_argument('-p', metavar='prefix', type=str, required=True, help='The prefix of CloudWatch Log Groups')
     parser.add_argument('-d', metavar='days', type=int, required=True, help='Retention in days')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return({'prefix':args.p, 'days':args.d})
@@ -57,10 +60,6 @@ def update_retention(profile_name,prefix,days):
     return(True)
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        return(2)
-
     opts = parse_opts()
     profile_name = "admin"
 

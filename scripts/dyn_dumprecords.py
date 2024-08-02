@@ -4,7 +4,6 @@
 # Last Modified: 2015-01-28
 # Author: Dong Guo
 
-import os
 import sys
 import requests
 import json
@@ -26,6 +25,10 @@ def parse_opts():
         ))
     parser.add_argument('zone_name', action="store", type=str)
 
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
     return {'zone_name': args.zone_name}
 
@@ -33,22 +36,22 @@ def dump_records(zone_name):
     customer_name = "YOUR-CUSTOMER-NAME"
     user_name = "YOUR-USER-NAME"
     password = "YOUR-PASSWORD"
-    
+
     api_url = "https://api.dynect.net"
     session_url = "/REST/Session/"
     nodelist_url = "/REST/NodeList/"
     anyrecord_url = "/REST/ANYRecord/"
-    
+
     headers_raw = {'Content-type': 'application/json'}
     auth_data = {'customer_name': customer_name, 'user_name': user_name, 'password': password}
     req_token = requests.post(api_url+session_url, data=json.dumps(auth_data), headers=headers_raw)
-    
+
     api_token = req_token.json()['data']['token']
-    
+
     headers_api = {'Auth-Token': '{0}'.format(api_token), 'Content-type': 'application/json'}
-    
+
     req_nodelist = requests.get(api_url+nodelist_url+zone_name, headers=headers_api)
-    
+
     for node in req_nodelist.json()['data']:
         print "nodename: {0}".format(node)
         req_anyrecord = requests.get(api_url+anyrecord_url+zone_name+"/"+node+"/", headers=headers_api)
@@ -60,10 +63,6 @@ def dump_records(zone_name):
             print """  ttl: {0} type: {1} rdata: {2}""".format(rec_ttl,rec_type,ast.literal_eval(json.dumps(rec_rdata)))
 
 if __name__ == '__main__':
-    # show help messages if no parameter
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        sys.exit(1)
     opts = parse_opts()
 
     dump_records(opts['zone_name'])

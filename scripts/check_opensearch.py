@@ -4,7 +4,6 @@
 # Description: HTTPS requests check index-name-* for OpenSearch
 # Author: Damon Guo
 
-import os
 import sys
 import requests
 from requests.auth import HTTPBasicAuth
@@ -39,6 +38,10 @@ def parse_opts():
     parser.add_argument('-o', metavar='output', type=str, choices=['severity','summary'], required=True, help='display value of the key in output')
     parser.add_argument('-m', metavar='minute', type=int, help='period to search [default: 1440]')
     parser.add_argument('-v', action="store_true", default=False, help='debug with json body')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'domain':args.n, 'auth':args.a, 'data':args.d, 'output':args.o, 'minute':args.m, 'debug':args.v}
@@ -122,10 +125,6 @@ def get_results(opts):
     return True
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        return 2
-
     opts = parse_opts()
     get_results(opts)
 

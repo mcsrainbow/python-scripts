@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-# Seek specific string from a log file incrementally and 
+# Seek specific string from a log file incrementally and
 # count the number of the lines including the string
 
 import os
@@ -13,10 +13,10 @@ YAML_DATA = '/var/tmp/logs_seek_pos.yml'
 
 def parse_opts():
     """Help messages(-h, --help)."""
-    
+
     import textwrap
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
@@ -28,10 +28,15 @@ def parse_opts():
           {0} --file_path /var/log/nginx/error.log --seek_str "style.css" --ignore_str "No such file or directory"
         '''.format(__file__)
         ))
-    
+
     parser.add_argument('--file_path', type=str, required=True, help='the file path')
     parser.add_argument('--seek_str', type=str, required=True, help='the string to seek')
     parser.add_argument('--ignore_str', type=str, help='the string to ignore')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
 
     return {'file_path':args.file_path, 'seek_str':args.seek_str, 'ignore_str':args.ignore_str}
@@ -69,7 +74,7 @@ def save_last_seek_pos(file_path,last_seek_pos,seek_str):
     return True
 
 def get_seek_count(file_path,seek_str,ignore_str=None):
-    last_seek_pos = get_last_seek_pos(file_path,seek_str)    
+    last_seek_pos = get_last_seek_pos(file_path,seek_str)
 
     seek_f = open(file_path,'r')
     seek_f.seek(last_seek_pos,0)
@@ -89,10 +94,6 @@ def get_seek_count(file_path,seek_str,ignore_str=None):
     return seek_count
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + ' -h')
-        return 2
-
     if not os.path.exists(YAML_DATA):
         with open(YAML_DATA, "w") as seek_f:
             seek_f.write("logs: {}")

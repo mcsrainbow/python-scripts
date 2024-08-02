@@ -30,14 +30,14 @@ def get_results(sftp_opts,folder_list,stats_yml):
     other_list = []
 
     def store_file_list(file_name):
-        file_list.append(file_name) 
+        file_list.append(file_name)
 
     def store_dir_list(dir_name):
         dir_list.append(dir_name)
 
     def store_other_list(other_name):
         other_list.append(other_name)
-  
+
     now_timestamp = int(time.time())
     now_time = datetime.datetime.fromtimestamp(now_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -76,13 +76,13 @@ def get_results(sftp_opts,folder_list,stats_yml):
             file_list_pre = []
         else:
             file_list_pre = data_dict['stats_results']['file_list']
-    
+
     file_list_arrived = set(file_list) - set(file_list_pre)
 
     stat_list_arrived = []
     for f in list(file_list_arrived):
         f_stat = sftp.lstat(f)
-        
+
         f_size = humansize(f_stat.st_size)
         f_mtimestamp = f_stat.st_mtime
         f_mtime = datetime.datetime.fromtimestamp(f_mtimestamp).strftime('%Y-%m-%d %H:%M:%S')
@@ -145,7 +145,7 @@ def main():
     sftp_opts['pkey'] = "/path/to/sshkey"
 
     folder_list = ["foo_dirs","bar_dirs"]
-    
+
     stats_dir = "{0}/stats".format(os.path.abspath(os.path.dirname(sys.argv[0])))
     stats_yml = "{0}/stats.yml".format(stats_dir)
 

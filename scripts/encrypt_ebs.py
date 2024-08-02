@@ -5,7 +5,6 @@
 # Author: Damon Guo
 # Last Modified: 11/26/2020
 
-import os
 import sys
 import json
 from datetime import datetime
@@ -16,7 +15,7 @@ REGION = 'ap-east-1'
 
 def parse_opts():
     """Help messages(-h, --help)."""
-    
+
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -30,6 +29,10 @@ def parse_opts():
 
     parser.add_argument('-n', metavar='name', type=str, required=True, help='instance tag name')
     parser.add_argument('-k', metavar='key', type=str, required=True, help='alias of CMK')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     args = parser.parse_args()
     return {'name':args.n, 'key':args.k}
@@ -51,12 +54,12 @@ def show_done_msg():
               1. Verify the attached volumes of instance via AWS Web Console, ensure they are encrypted with correct CMKs
               2. Start the instance via AWS Web Console
               3. Login the instance via SSH/RDP, verify the services running on the instance
-               
+
               If anything does NOT work properly:
               1. Troubleshoot the issues
               2. Fallback with previous nonkms volumes if cannot fix the issues''')
     print(done_msg)
-    
+
     return True
 
 def encrypt_ebs(opts):
@@ -84,13 +87,13 @@ def encrypt_ebs(opts):
     kms_res = kms_c.list_aliases(Limit=100)
     for kms_alias_item in kms_res['Aliases']:
         if kms_alias_item['AliasName'] == "alias/{0}".format(opts['key']):
-            cmk_id = kms_alias_item['TargetKeyId']                                                                                               
+            cmk_id = kms_alias_item['TargetKeyId']
             break
 
     if not cmk_id:
         print("ERROR: No such CMK: {0}".format(opts['key']))
         return False
-   
+
     # skip if attached volumes already encrypted
     volume_encrypted_count = 0
     for volume_item in ec2_res['Reservations'][0]['Instances'][0]['BlockDeviceMappings']:
@@ -113,7 +116,7 @@ def encrypt_ebs(opts):
     if volume_encrypted_count > 0:
         print("SKIPPED: volume_encrypted_count is greater than 0")
         return True
-   
+
     # stop instance if it is running
     if instance.state['Name'] == 'running':
         print("INFO: Stopping the instance: {0} with id: {1}...".format(opts['name'],instance_id))
@@ -187,7 +190,7 @@ def encrypt_ebs(opts):
             )
             print("INFO: Created snapshot: {0} for device: {1}".format(snapshot.id,volume_attr['device']))
             snapshot_dict[volume_attr['device']] = snapshot.id
-    
+
     print("INFO: snapshot_dict: {0}".format(json.dumps(snapshot_dict, indent=2)))
 
     # get new volumes ids and create with CMK encrypted if not exist
@@ -268,7 +271,7 @@ def encrypt_ebs(opts):
 
             print("INFO: Created kms_volume: {0} for device: {1}".format(volume_res['VolumeId'],volume_attr['device']))
             kms_volume_dict[volume_attr['device']] = volume_res['VolumeId']
-    
+
     print("INFO: kms_volume_dict: {0}".format(json.dumps(kms_volume_dict, indent=2)))
 
     # detache nonkms volumes and attache kms_volumes
@@ -281,8 +284,8 @@ def encrypt_ebs(opts):
             print("INFO: Current kms_volume: {0} status is {1}, waiting for it to be available...".format(kms_volume_id,kms_volume_res['Volumes'][0]['State']))
             volume_waiter = ec2_c.get_waiter('volume_available')
             volume_waiter.wait(VolumeIds=[kms_volume_id])
-   
-    for volume_id, volume_attr in volume_dict.items(): 
+
+    for volume_id, volume_attr in volume_dict.items():
         volume_res = ec2_c.describe_volumes(VolumeIds=[volume_id])
         if volume_res['Volumes'][0]['State'] == 'in-use':
             print("INFO: Detaching the volume_device: {0}...".format(volume_attr['device']))
@@ -307,10 +310,6 @@ def encrypt_ebs(opts):
     return True
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + " -h")
-        return 2
-
     opts = parse_opts()
     if encrypt_ebs(opts):
         return 0

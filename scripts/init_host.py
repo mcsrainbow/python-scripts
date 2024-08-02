@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
-# Description: Pre-configure a host for Ansible
+# Description: Pre-configure a h for Ansible
 # Author: Dong Guo
 # Last modified: 2016-12-12
 
-import os
 import sys
 import subprocess
 import paramiko
@@ -31,6 +30,11 @@ def parse_opts():
     parser.add_argument('-s', metavar='server', type=str, required=True, help='the server address')
     parser.add_argument('-p', metavar='password', type=str, required=True, help='the root password')
     parser.add_argument('-P', metavar='port', type=int, help='the ssh port')
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
     args = parser.parse_args()
 
     return {'server':args.s, 'password':args.p, 'port':args.P}
@@ -43,18 +47,18 @@ class _AttributeString(str):
     def stdout(self):
         return str(self)
 
-def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
+def remote(cmd, hname, username, password=None, pkey=None, pkey_type="rsa", port=22):
     p = paramiko.SSHClient()
-    p.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    p.set_missing_h_key_policy(paramiko.AutoAddPolicy())
 
     if pkey is not None:
         if pkey_type == "dsa":
             pkey = paramiko.DSSKey.from_private_key_file(pkey)
         else:
             pkey = paramiko.RSAKey.from_private_key_file(pkey)
-        p.connect(hostname=hostname, username=username, pkey=pkey, port=port)
+        p.connect(hname=hostname, username=username, pkey=pkey, port=port)
     else:
-        p.connect(hostname=hostname, username=username, password=password, port=port)
+        p.connect(hname=hostname, username=username, password=password, port=port)
 
     (stdin, stdout, stderr) = p.exec_command(cmd)
 
@@ -76,12 +80,12 @@ def remote(cmd, hostname, username, password=None, pkey=None, pkey_type="rsa", p
         out.failed = True
     out.succeeded = not out.failed
 
-    p.close()
+    p.cl()
     return out
 
-def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey_type="rsa",
+def sftp(src_path, dest_path, hname, username, password=None, pkey=None, pkey_type="rsa",
          port=22, transfer_type=None):
-    p = paramiko.Transport((hostname,port))
+    p = paramiko.Transport((hname,port))
 
     if pkey is not None:
         if pkey_type == "dsa":
@@ -110,29 +114,25 @@ def sftp(src_path, dest_path, hostname, username, password=None, pkey=None, pkey
 
     out.succeeded = not out.failed
 
-    p.close()
+    p.cl()
     return out
 
-def get(remote_path, local_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
-    return sftp(remote_path, local_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type,
+def get(remote_path, local_path, hname, username, password=None, pkey=None, pkey_type="rsa", port=22):
+    return sftp(remote_path, local_path, hname, username, password=password, pkey=pkey, pkey_type=pkey_type,
                 port=port, transfer_type="get")
 
-def put(local_path, remote_path, hostname, username, password=None, pkey=None, pkey_type="rsa", port=22):
-    return sftp(local_path, remote_path, hostname, username, password=password, pkey=pkey, pkey_type=pkey_type,
+def put(local_path, remote_path, hname, username, password=None, pkey=None, pkey_type="rsa", port=22):
+    return sftp(local_path, remote_path, hname, username, password=password, pkey=pkey, pkey_type=pkey_type,
                 port=port, transfer_type="put")
 
 def main():
-    if len(sys.argv) < 2:
-        os.system(__file__ + ' -h')
-        return 2
-
     # locate ansible workhome
-    os.chdir(WORKHOME)
+    chdir(WORKHOME)
 
     # get parameters
     opts = parse_opts()
 
-    hostname = opts['server']
+    hname = opts['server']
     password = opts['password']
     ssh_port = opts['port']
     username = 'root'
@@ -143,32 +143,32 @@ def main():
 
     cmd = ' && '.join(cmd_list)
     if ssh_port is not None:
-        out = remote(cmd,hostname=hostname,username=username,password=password,port=ssh_port)
+        out = remote(cmd,hname=hostname,username=username,password=password,port=ssh_port)
     else:
-        out = remote(cmd,hostname=hostname,username=username,password=password)
+        out = remote(cmd,hname=hostname,username=username,password=password)
 
     if out.failed:
-        print "Failed to run command:'{0}' on server:'{1}'".format(cmd,hostname)
+        print "Failed to run command:'{0}' on server:'{1}'".format(cmd,hname)
         return 2
 
-    print "Succeeded to run command:'{0}' on server:'{1}'".format(cmd,hostname)
+    print "Succeeded to run command:'{0}' on server:'{1}'".format(cmd,hname)
 
     put_list = ['/local/path/to/authorized_keys,/root/.ssh/authorized_keys',
-                '/local/path/to/CentOS-Base.repo,/etc/yum.repos.d/CentOS-Base.repo']
+                '/local/path/to/CentOS-Base.repo,/etc/yum.repd/CentOS-Base.repo']
 
     for put_item in put_list:
         src_file = put_item.split(',')[0]
         dest_file = put_item.split(',')[1]
 
         if ssh_port is not None:
-            out = put(src_file,dest_file,hostname=hostname,username=username,password=password,port=ssh_port)
+            out = put(src_file,dest_file,hname=hostname,username=username,password=password,port=ssh_port)
         else:
-            out = put(src_file,dest_file,hostname=hostname,username=username,password=password)
+            out = put(src_file,dest_file,hname=hostname,username=username,password=password)
         if out.failed:
-            print "Failed to upload file:'{0}' to server:'{1}:{2}'".format(src_file,hostname,dest_file)
+            print "Failed to upload file:'{0}' to server:'{1}:{2}'".format(src_file,hname,dest_file)
             return 2
 
-        print "Succeeded to upload file:'{0}' to server:'{1}:{2}'".format(src_file,hostname,dest_file)
+        print "Succeeded to upload file:'{0}' to server:'{1}:{2}'".format(src_file,hname,dest_file)
 
     return 0
 
