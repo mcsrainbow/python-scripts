@@ -232,7 +232,7 @@ class RemoteWriteClient:
             Formatted string like {key:"value",key2:"value2"}
         """
         if not labels:
-            return "{}"
+            return ""
         return "{" + ",".join(f'{k}:"{v}"' for k, v in labels.items()) + "}"
 
     def _labels_dict(self, ts):
@@ -655,7 +655,7 @@ if __name__ == "__main__":
 # ---------------------------------------------------------------------------
 # [DEBUG] remote_write_req_seq: 1
 # # TYPE billing_orders_total counter
-# billing_orders_total{} 85
+# billing_orders_total 85
 #
 # [DEBUG] remote_write_req_seq: 2
 # # TYPE billing_queue_depth gauge
